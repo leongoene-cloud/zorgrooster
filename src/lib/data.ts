@@ -89,6 +89,23 @@ export async function haalVerlofAanvragen(opties: { zorgverlenerId?: string; sta
   return check(await q.order("start_datum", { ascending: false }));
 }
 
+export type TeamVerlof = Pick<VerlofAanvraag, "id" | "zorgverlener_id" | "start_datum" | "eind_datum" | "status">;
+
+/** Openstaand en goedgekeurd verlof van iedereen, van vandaag en later (zonder reden) */
+export async function haalTeamVerlof(vanaf: string): Promise<TeamVerlof[]> {
+  const sb = await createClient();
+  const token = await linkToken();
+  if (token) return check(await sb.rpc("zv_verlof_team", { p_token: token }));
+  return check(
+    await sb
+      .from("verlof_aanvragen")
+      .select("id, zorgverlener_id, start_datum, eind_datum, status")
+      .in("status", ["aangevraagd", "goedgekeurd"])
+      .gte("eind_datum", vanaf)
+      .order("start_datum"),
+  );
+}
+
 export async function haalVakanties(van: string, tot: string, regio = "midden"): Promise<Schoolvakantie[]> {
   const sb = await createClient();
   const token = await linkToken();

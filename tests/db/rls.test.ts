@@ -422,6 +422,28 @@ describe("persoonlijke link (zorgverlener zonder account)", () => {
     expect(Object.keys(v.rows[0])).not.toContain("reden");
   });
 
+  it("zorgverleners zien openstaand en goedgekeurd verlof van collega's, zonder reden", async () => {
+    const anna = await maakLink("anna");
+    const bram = await maakLink("bram");
+    await als("anoniem");
+    const open = (await db.query("select public.zv_verlof_aanvragen($1, current_date + 10, current_date + 12, 'geheim') as id", [anna])).rows[0].id;
+    const goed = (await db.query("select public.zv_verlof_aanvragen($1, current_date + 20, current_date + 21) as id", [anna])).rows[0].id;
+    const af = (await db.query("select public.zv_verlof_aanvragen($1, current_date + 30, current_date + 31) as id", [anna])).rows[0].id;
+    const voorbij = (await db.query("select public.zv_verlof_aanvragen($1, current_date - 10, current_date - 5) as id", [anna])).rows[0].id;
+    await als("admin");
+    await db.query("update public.verlof_aanvragen set status = 'goedgekeurd' where id = any($1)", [[goed, voorbij]]);
+    await db.query("update public.verlof_aanvragen set status = 'afgekeurd' where id = $1", [af]);
+
+    await als("anoniem");
+    const team = await db.query("select * from public.zv_verlof_team($1)", [bram]);
+    expect(team.rows.map((r) => [r.id, r.status])).toEqual([
+      [open, "aangevraagd"],
+      [goed, "goedgekeurd"],
+    ]);
+    expect(Object.keys(team.rows[0])).not.toContain("reden");
+    expect((await db.query("select * from public.zv_verlof_team('ongeldig-ongeldig-ongeldig-ongeldig')")).rowCount).toBe(0);
+  });
+
   it("nieuwe link of deactiveren maakt de oude link ongeldig", async () => {
     const oud = await maakLink("anna");
     const nieuw = await maakLink("anna");

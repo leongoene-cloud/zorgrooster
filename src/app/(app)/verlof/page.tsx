@@ -4,7 +4,7 @@ import { BevestigKnop, VerzendKnop } from "@/components/formulier";
 import { tijdenTekst } from "@/components/kalender";
 import { cn, Kaart, KleurBolletje, knopKlassen, LegeStaat, Melding, StatusBadge, invoerKlassen } from "@/components/ui";
 import { vereisLid } from "@/lib/auth";
-import { haalDiensten, haalVakanties, haalVerlofAanvragen, haalZorgverleners } from "@/lib/data";
+import { haalDiensten, haalTeamVerlof, haalVakanties, haalVerlofAanvragen, haalZorgverleners } from "@/lib/data";
 import { aantalDagen, periodeTekst, plusDagen, plusMaanden, tijdstipTekst, vandaag as vandaagFn } from "@/lib/datum";
 import { STATUS_LABEL, typeLabel, type VerlofAanvraag, type VerlofStatus } from "@/lib/types";
 import { annuleerVerlof, beoordeelVerlof, verlofInplannen, verlofIntrekken, vraagVerlofAan } from "./actions";
@@ -31,11 +31,12 @@ export default async function VerlofPagina({ searchParams }: PageProps<"/verlof"
   const vandaag = vandaagFn();
   const overTwaalfMaanden = plusMaanden(vandaag, 12);
 
-  const [zorgverleners, eigen, vakanties, mijnDiensten] = await Promise.all([
+  const [zorgverleners, eigen, vakanties, mijnDiensten, team] = await Promise.all([
     haalZorgverleners(),
     haalVerlofAanvragen({ zorgverlenerId: sessie.zorgverlener.id }),
     haalVakanties(vandaag, overTwaalfMaanden),
     haalDiensten(vandaag, plusDagen(vandaag, 400), sessie.zorgverlener.id),
+    haalTeamVerlof(vandaag),
   ]);
   const zvMap = new Map(zorgverleners.map((z) => [z.id, z]));
 
@@ -102,6 +103,36 @@ export default async function VerlofPagina({ searchParams }: PageProps<"/verlof"
           )}
         </Kaart>
       </div>
+
+      <Kaart titel="Verlof van het team">
+        {team.length === 0 ? (
+          <LegeStaat>Er is geen openstaand of goedgekeurd verlof gepland.</LegeStaat>
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {team.map((v) => {
+              const zv = zvMap.get(v.zorgverlener_id);
+              const eigenVerlof = v.zorgverlener_id === sessie.zorgverlener.id;
+              return (
+                <li key={v.id} className="flex flex-col gap-2 rounded-xl border-2 border-gray-200 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="flex items-center gap-2 text-lg font-bold">
+                      <KleurBolletje kleur={zv?.kleur ?? "#888888"} groot />
+                      {zv?.naam ?? "Onbekend"}
+                      {eigenVerlof && <span className="text-sm font-semibold text-gray-700">(jij)</span>}
+                    </span>
+                    <StatusBadge status={v.status} />
+                  </div>
+                  <span>{periodeTekst(v.start_datum, v.eind_datum)}</span>
+                  <span className="text-sm text-gray-700">
+                    {aantalDagen(v.start_datum, v.eind_datum)} {aantalDagen(v.start_datum, v.eind_datum) === 1 ? "dag" : "dagen"}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <p className="mt-3 text-sm text-gray-700">Openstaande aanvragen zijn nog niet goedgekeurd. De reden van verlof is alleen zichtbaar voor de beheerder.</p>
+      </Kaart>
 
       <Kaart
         titel="Schoolvakanties regio Midden (komende 12 maanden)"
