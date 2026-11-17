@@ -1,5 +1,16 @@
-import { dagenTussen, dagenVanMaand, eersteDag, plusDagen, weekdag } from "./datum";
-import type { Dienst, DienstSjabloon, NieuweDienst } from "./types";
+import { dagenTussen, dagenVanMaand, eersteDag, maandagVan, plusDagen, verschilDagen, weekdag } from "./datum";
+import type { Dienst, DienstSjabloon, NieuweDienst, SjabloonRitme } from "./types";
+
+const RITME_START = "2000-01-03"; // een maandag
+
+/** 'even' of 'oneven' voor de week waarin deze datum valt (doorlopend, ook over de jaargrens) */
+export function weekPariteit(datum: string): "even" | "oneven" {
+  return Math.floor(verschilDagen(RITME_START, maandagVan(datum)) / 7) % 2 === 0 ? "even" : "oneven";
+}
+
+export function geldtInWeek(ritme: SjabloonRitme | undefined, datum: string): boolean {
+  return !ritme || ritme === "elke" || ritme === weekPariteit(datum);
+}
 
 const tijd5 = (t: string) => t.slice(0, 5);
 
@@ -12,7 +23,7 @@ export function dienstenUitSjabloon(sjablonen: DienstSjabloon[], maand: string):
   const uit: NieuweDienst[] = [];
   for (const datum of dagenVanMaand(maand)) {
     const wd = weekdag(datum);
-    for (const s of sjablonen.filter((s) => s.weekdag === wd).sort((a, b) => a.start_tijd.localeCompare(b.start_tijd))) {
+    for (const s of sjablonen.filter((s) => s.weekdag === wd && geldtInWeek(s.ritme, datum)).sort((a, b) => a.start_tijd.localeCompare(b.start_tijd))) {
       uit.push({
         zorgverlener_id: s.zorgverlener_id,
         datum,

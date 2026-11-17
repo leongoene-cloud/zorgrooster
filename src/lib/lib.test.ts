@@ -14,7 +14,7 @@ import {
 import { maakWerkboek } from "./excel";
 import { maakIcs } from "./ics";
 import { parseDatum, parseImport, parseTijd } from "./importeren";
-import { bronDatumVorigeMaand, dienstenUitSjabloon, kopieerMaand, kopieerWeek, splitsBestaand } from "./plannen";
+import { bronDatumVorigeMaand, dienstenUitSjabloon, kopieerMaand, kopieerWeek, splitsBestaand, weekPariteit } from "./plannen";
 import type { Dienst, ZorgverlenerPubliek } from "./types";
 import { afrondenKwartier, dienstMinuten, duurMinuten, urenOverzicht } from "./uren";
 
@@ -148,12 +148,31 @@ describe("controles", () => {
 describe("plannen", () => {
   it("vult een maand vanuit het weeksjabloon", () => {
     const sjablonen = [1, 2, 3, 4, 5, 6, 7].flatMap((weekdag) => [
-      { id: `s${weekdag}`, weekdag, zorgverlener_id: "anna", type: "dag" as const, start_tijd: "09:00:00", eind_tijd: "21:00:00" },
-      { id: `n${weekdag}`, weekdag, zorgverlener_id: weekdag <= 3 ? "bram" : "anna", type: "nacht" as const, start_tijd: "21:00:00", eind_tijd: "09:00:00" },
+      { id: `s${weekdag}`, weekdag, ritme: "elke" as const, zorgverlener_id: "anna", type: "dag" as const, start_tijd: "09:00:00", eind_tijd: "21:00:00" },
+      { id: `n${weekdag}`, weekdag, ritme: "elke" as const, zorgverlener_id: weekdag <= 3 ? "bram" : "anna", type: "nacht" as const, start_tijd: "21:00:00", eind_tijd: "09:00:00" },
     ]);
     const d = dienstenUitSjabloon(sjablonen, "2026-12");
     expect(d).toHaveLength(62);
     expect(d[1]).toMatchObject({ datum: "2026-12-01", zorgverlener_id: "bram", type: "nacht", start_tijd: "21:00" }); // dinsdag
+  });
+  it("om-de-week-diensten volgen het ritme, ook over de jaargrens", () => {
+    // Zondagnachten in het Excel: Kimberly en Sheela wisselen strikt af
+    const kimberly = ["2026-10-04", "2026-10-18", "2026-11-01", "2026-11-15", "2026-11-29", "2026-12-13"];
+    const sheela = ["2026-10-11", "2026-10-25", "2026-11-08", "2026-11-22", "2026-12-06", "2026-12-20"];
+    const p = weekPariteit(kimberly[0]);
+    expect(kimberly.every((d) => weekPariteit(d) === p)).toBe(true);
+    expect(sheela.every((d) => weekPariteit(d) !== p)).toBe(true);
+    // ISO-week 53 → week 1: het ritme loopt gewoon door
+    expect(weekPariteit("2027-01-03")).not.toBe(weekPariteit("2027-01-10"));
+
+    const sjablonen = [
+      { id: "k", weekdag: 7, ritme: p, zorgverlener_id: "anna", type: "nacht" as const, start_tijd: "21:00", eind_tijd: "09:00" },
+      { id: "s", weekdag: 7, ritme: p === "even" ? ("oneven" as const) : ("even" as const), zorgverlener_id: "bram", type: "nacht" as const, start_tijd: "21:00", eind_tijd: "09:00" },
+    ];
+    const jan = dienstenUitSjabloon(sjablonen, "2027-01");
+    expect(jan.map((d) => `${d.datum} ${d.zorgverlener_id}`)).toEqual([
+      "2027-01-03 bram", "2027-01-10 anna", "2027-01-17 bram", "2027-01-24 anna", "2027-01-31 bram",
+    ]);
   });
   it("kopieert de vorige week en vorige maand met behoud van weekdag", () => {
     const bron = [dienst({ datum: "2026-11-23" }), dienst({ datum: "2026-11-29" }), dienst({ datum: "2026-11-30" })];

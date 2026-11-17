@@ -4,7 +4,8 @@ import { BevestigKnop } from "@/components/formulier";
 import { tijdenTekst } from "@/components/kalender";
 import { Kaart, KleurBolletje, knopKlassen, Melding, PaginaTitel } from "@/components/ui";
 import { haalSjablonen, haalZorgverleners } from "@/lib/data";
-import { huidigeMaand, maandNaam, verschuifMaand, WEEKDAG_NAMEN } from "@/lib/datum";
+import { datumKort, huidigeMaand, maandagVan, maandNaam, plusDagen, vandaag, verschuifMaand, WEEKDAG_NAMEN, weekdag as weekdagVan } from "@/lib/datum";
+import { weekPariteit } from "@/lib/plannen";
 import { typeLabel } from "@/lib/types";
 import { verwijderSjabloon, voegSjabloonToe } from "../actions";
 import { SjabloonFormulier } from "./sjabloon-formulier";
@@ -17,6 +18,19 @@ export default async function SjabloonPagina({ searchParams }: PageProps<"/behee
   const zvMap = new Map(zorgverleners.map((z) => [z.id, z]));
   const deze = huidigeMaand();
   const volgende = verschuifMaand(deze, 1);
+  const dezeWeek = maandagVan(vandaag());
+  const volgendeWeek = plusDagen(dezeWeek, 7);
+  const ritmeOpties = [
+    { waarde: "elke", label: "Elke week" },
+    { waarde: weekPariteit(dezeWeek), label: `Om de week, vanaf deze week (${datumKort(dezeWeek)})` },
+    { waarde: weekPariteit(volgendeWeek), label: `Om de week, vanaf volgende week (${datumKort(volgendeWeek)})` },
+  ];
+  /** Eerstvolgende datums waarop een om-de-week-dienst valt */
+  const eerstvolgend = (weekdag: number, ritme: string) => {
+    let d = vandaag();
+    while (weekdagVan(d) !== weekdag || weekPariteit(d) !== ritme) d = plusDagen(d, 1);
+    return [d, plusDagen(d, 14)].map(datumKort).join(", ");
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -57,6 +71,9 @@ export default async function SjabloonPagina({ searchParams }: PageProps<"/behee
                         <span>
                           {typeLabel(s.type)} {tijdenTekst(s)}
                         </span>
+                        {s.ritme !== "elke" && (
+                          <span className="text-sm font-semibold text-purple-900">Om de week · eerstvolgend {eerstvolgend(s.weekdag, s.ritme)}</span>
+                        )}
                         <form action={verwijderSjabloon}>
                           <input type="hidden" name="id" value={s.id} />
                           <BevestigKnop label="Verwijderen" bevestigLabel="Ja, verwijderen" />
@@ -72,7 +89,7 @@ export default async function SjabloonPagina({ searchParams }: PageProps<"/behee
       </Kaart>
 
       <Kaart titel="Dienst aan het sjabloon toevoegen">
-        <SjabloonFormulier actie={voegSjabloonToe} zorgverleners={zorgverleners} />
+        <SjabloonFormulier actie={voegSjabloonToe} zorgverleners={zorgverleners} ritmeOpties={ritmeOpties} />
       </Kaart>
     </div>
   );

@@ -1,6 +1,8 @@
 export type DienstType = "dag" | "avond" | "nacht" | "overig";
 export type VerlofStatus = "aangevraagd" | "goedgekeurd" | "afgekeurd" | "geannuleerd";
 export type Rol = "admin" | "zorgverlener";
+/** elke week, of om de week (even/oneven geteld vanaf maandag 3 januari 2000) */
+export type SjabloonRitme = "elke" | "even" | "oneven";
 
 export interface ZorgverlenerPubliek {
   id: string;
@@ -65,6 +67,7 @@ export interface Schoolvakantie {
 export interface DienstSjabloon {
   id: string;
   weekdag: number; // 1 = maandag ... 7 = zondag
+  ritme: SjabloonRitme;
   zorgverlener_id: string;
   type: DienstType;
   start_tijd: string;

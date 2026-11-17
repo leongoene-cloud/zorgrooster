@@ -171,6 +171,8 @@ export async function voegSjabloonToe(_: ActieStatus, data: FormData): Promise<A
   const type = tekst(data, "type") as DienstType;
   const start = tekst(data, "start_tijd");
   const eind = tekst(data, "eind_tijd");
+  const ritme = tekst(data, "ritme") || "elke";
+  if (!["elke", "even", "oneven"].includes(ritme)) return { fout: "Kies hoe vaak deze dienst terugkomt." };
   if (!dagen.length) return { fout: "Kies minstens één weekdag." };
   if (!UUID.test(zv)) return { fout: "Kies een zorgverlener." };
   if (!TYPES.includes(type)) return { fout: "Kies het soort dienst." };
@@ -178,7 +180,7 @@ export async function voegSjabloonToe(_: ActieStatus, data: FormData): Promise<A
   const supabase = await createClient();
   const { error } = await supabase
     .from("dienst_sjablonen")
-    .insert(dagen.map((weekdag) => ({ weekdag, zorgverlener_id: zv, type, start_tijd: start, eind_tijd: eind })));
+    .insert(dagen.map((weekdag) => ({ weekdag, ritme, zorgverlener_id: zv, type, start_tijd: start, eind_tijd: eind })));
   if (error) return { fout: `Opslaan lukte niet: ${error.message}` };
   vernieuw();
   redirect("/beheer/sjabloon?melding=toegevoegd");

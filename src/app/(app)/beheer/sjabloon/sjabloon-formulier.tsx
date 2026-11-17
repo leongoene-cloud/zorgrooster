@@ -6,10 +6,18 @@ import { cn, KeuzeTegels } from "@/components/ui";
 import { WEEKDAG_NAMEN } from "@/lib/datum";
 import { DIENST_TYPES, type DienstType, type ZorgverlenerPubliek } from "@/lib/types";
 
-export function SjabloonFormulier({ actie, zorgverleners }: { actie: Actie; zorgverleners: ZorgverlenerPubliek[] }) {
+export function SjabloonFormulier({
+  actie,
+  zorgverleners,
+  ritmeOpties,
+}: {
+  actie: Actie;
+  zorgverleners: ZorgverlenerPubliek[];
+  ritmeOpties: { waarde: string; label: string }[];
+}) {
   const [type, setType] = useState<DienstType>("dag");
-  const [start, setStart] = useState("09:00");
-  const [eind, setEind] = useState("21:00");
+  const [start, setStart] = useState(DIENST_TYPES[0].start);
+  const [eind, setEind] = useState(DIENST_TYPES[0].eind);
   const tegel =
     "flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border-2 px-4 text-lg font-semibold has-[:focus-visible]:outline has-[:focus-visible]:outline-4 has-[:focus-visible]:outline-amber-500";
 
@@ -53,6 +61,7 @@ export function SjabloonFormulier({ actie, zorgverleners }: { actie: Actie; zorg
           ))}
         </div>
       </fieldset>
+      <KeuzeTegels name="ritme" legend="Hoe vaak?" standaard="elke" opties={ritmeOpties} kolommen="grid-cols-1 lg:grid-cols-3" />
       <TijdKiezer name="start_tijd" label="Begintijd" waarde={start} onChange={setStart} />
       <TijdKiezer name="eind_tijd" label="Eindtijd" waarde={eind} onChange={setEind} />
       <VerzendKnop className="self-start min-w-56">Toevoegen aan sjabloon</VerzendKnop>

@@ -114,6 +114,6 @@ export async function haalAlleVakanties(): Promise<Schoolvakantie[]> {
 export async function haalSjablonen(): Promise<DienstSjabloon[]> {
   const sb = await createClient();
   return check(
-    await sb.from("dienst_sjablonen").select("id, weekdag, zorgverlener_id, type, start_tijd, eind_tijd").order("weekdag").order("start_tijd"),
+    await sb.from("dienst_sjablonen").select("id, weekdag, ritme, zorgverlener_id, type, start_tijd, eind_tijd").order("weekdag").order("start_tijd"),
   );
 }
