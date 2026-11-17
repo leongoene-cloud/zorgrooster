@@ -64,3 +64,50 @@ export async function beoordeelVerlof(data: FormData) {
   // Na goedkeuring meteen de diensten tonen die vervangen moeten worden
   redirect(besluit === "goedgekeurd" ? `/beheer/vervanging?verlof=${id}` : "/verlof?melding=afgekeurd");
 }
+
+/** Beheerder plant verlof in voor een zorgverlener; meteen goedgekeurd */
+export async function verlofInplannen(_: ActieStatus, data: FormData): Promise<ActieStatus> {
+  await vereisAdmin();
+  const zv = String(data.get("zorgverlener_id") ?? "");
+  const start = String(data.get("start_datum") ?? "");
+  const eind = String(data.get("eind_datum") ?? "");
+  const reden = String(data.get("reden") ?? "").trim().slice(0, 500) || null;
+  if (!/^[0-9a-f-]{36}$/i.test(zv)) return { fout: "Kies een zorgverlener." };
+  if (!isGeldigeDatum(start) || !isGeldigeDatum(eind)) return { fout: "Kies een geldige start- en einddatum." };
+  if (eind < start) return { fout: "De laatste verlofdag mag niet vóór de eerste liggen." };
+
+  const supabase = await createClient();
+  const { data: rij, error } = await supabase
+    .from("verlof_aanvragen")
+    .insert({
+      zorgverlener_id: zv,
+      start_datum: start,
+      eind_datum: eind,
+      reden,
+      status: "goedgekeurd",
+      opmerking_admin: "Ingepland door de beheerder",
+      beoordeeld_op: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+  if (error || !rij) return { fout: `Opslaan lukte niet${error ? `: ${error.message}` : ""}.` };
+  revalidatePath("/", "layout");
+  // Meteen laten zien welke diensten in die periode vervangen moeten worden
+  redirect(`/beheer/vervanging?verlof=${rij.id}`);
+}
+
+/** Beheerder trekt verlof in (open of goedgekeurd); markeringen 'vervanging nodig' verdwijnen */
+export async function verlofIntrekken(data: FormData) {
+  await vereisAdmin();
+  const id = String(data.get("id") ?? "");
+  const supabase = await createClient();
+  const { data: rij, error } = await supabase
+    .from("verlof_aanvragen")
+    .update({ status: "geannuleerd" })
+    .eq("id", id)
+    .in("status", ["aangevraagd", "goedgekeurd"])
+    .select("id")
+    .maybeSingle();
+  revalidatePath("/", "layout");
+  redirect(error || !rij ? "/verlof?fout=intrekken#historie" : "/verlof?melding=ingetrokken#historie");
+}

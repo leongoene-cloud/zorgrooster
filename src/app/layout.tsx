@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { themaKeuze } from "@/lib/thema";
 
 export const metadata: Metadata = {
   title: { default: "Zorgrooster", template: "%s · Zorgrooster" },
@@ -10,12 +11,16 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#1d4ed8",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#1d4ed8" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d1117" },
+  ],
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const thema = await themaKeuze();
   return (
-    <html lang="nl">
+    <html lang="nl" className={thema ?? undefined}>
       <body className="min-h-dvh antialiased">{children}</body>
     </html>
   );

@@ -3,12 +3,16 @@
 :root {
   --achtergrond: #f6f7f9;
   --tekst: #111827;
+  --oppervlak: #ffffff;
+  --vakantie-a: #fef9c3;
+  --vakantie-b: #fefce8;
   color-scheme: light;
 }
 
 @theme inline {
   --color-achtergrond: var(--achtergrond);
   --color-tekst: var(--tekst);
+  --color-oppervlak: var(--oppervlak);
   --font-sans: var(--font-inter), system-ui, sans-serif;
 }
 
@@ -30,5 +34,116 @@ body {
 
 /* Kalenderdag in een schoolvakantie */
 .vakantie-achtergrond {
-  background-image: repeating-linear-gradient(135deg, #fef9c3 0 10px, #fefce8 10px 20px);
+  background-image: repeating-linear-gradient(135deg, var(--vakantie-a) 0 10px, var(--vakantie-b) 10px 20px);
+}
+
+/* ---------------------------------------------------------------------------
+   Donkere modus. Standaard volgt de app het apparaat; met de knop in de kopbalk
+   kies je zelf (cookie 'thema' → class 'donker' of 'licht' op <html>).
+   In donker krijgen grijstinten en lichte tinten andere waarden; de 600/700-tinten
+   van knoppen (met witte tekst) blijven gelijk.
+   --------------------------------------------------------------------------- */
+html.donker {
+  --color-gray-50: #1c2128;
+  --color-gray-100: #262c36;
+  --color-gray-200: #30363d;
+  --color-gray-300: #3d444d;
+  --color-gray-400: #6e7681;
+  --color-gray-500: #8b949e;
+  --color-gray-600: #a3acb6;
+  --color-gray-700: #b8c0ca;
+  --color-gray-800: #d0d7de;
+  --color-gray-900: #e6edf3;
+  --color-gray-950: #f0f3f6;
+  --color-blue-50: #12233d;
+  --color-blue-100: #172c4d;
+  --color-blue-200: #1d3b66;
+  --color-blue-300: #2b5591;
+  --color-blue-400: #3f6fb8;
+  --color-blue-500: #4f86d6;
+  --color-blue-800: #a8c7fa;
+  --color-blue-900: #c2d8fc;
+  --color-blue-950: #dbe8fe;
+  --color-red-50: #3a1414;
+  --color-red-100: #4a1919;
+  --color-red-300: #7a2a2a;
+  --color-red-400: #b04040;
+  --color-red-800: #ffb4ab;
+  --color-red-900: #ffc9c2;
+  --color-red-950: #ffdad5;
+  --color-green-50: #10301c;
+  --color-green-100: #143d24;
+  --color-green-400: #2f8f53;
+  --color-green-500: #3aa864;
+  --color-green-900: #b7f0c8;
+  --color-green-950: #d4f7de;
+  --color-amber-50: #33270a;
+  --color-amber-100: #40310c;
+  --color-amber-300: #7a5a12;
+  --color-amber-400: #a87b16;
+  --color-amber-900: #fde3a7;
+  --color-amber-950: #feefc9;
+  --color-purple-100: #2e1f4a;
+  --color-purple-400: #7c5cc4;
+  --color-purple-900: #ddd0ff;
+  --color-purple-950: #ece5ff;
+  --achtergrond: #0d1117;
+  --tekst: #e6edf3;
+  --oppervlak: #161b22;
+  --vakantie-a: #2b2510;
+  --vakantie-b: #211c0c;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  html:not(.licht) {
+  --color-gray-50: #1c2128;
+  --color-gray-100: #262c36;
+  --color-gray-200: #30363d;
+  --color-gray-300: #3d444d;
+  --color-gray-400: #6e7681;
+  --color-gray-500: #8b949e;
+  --color-gray-600: #a3acb6;
+  --color-gray-700: #b8c0ca;
+  --color-gray-800: #d0d7de;
+  --color-gray-900: #e6edf3;
+  --color-gray-950: #f0f3f6;
+  --color-blue-50: #12233d;
+  --color-blue-100: #172c4d;
+  --color-blue-200: #1d3b66;
+  --color-blue-300: #2b5591;
+  --color-blue-400: #3f6fb8;
+  --color-blue-500: #4f86d6;
+  --color-blue-800: #a8c7fa;
+  --color-blue-900: #c2d8fc;
+  --color-blue-950: #dbe8fe;
+  --color-red-50: #3a1414;
+  --color-red-100: #4a1919;
+  --color-red-300: #7a2a2a;
+  --color-red-400: #b04040;
+  --color-red-800: #ffb4ab;
+  --color-red-900: #ffc9c2;
+  --color-red-950: #ffdad5;
+  --color-green-50: #10301c;
+  --color-green-100: #143d24;
+  --color-green-400: #2f8f53;
+  --color-green-500: #3aa864;
+  --color-green-900: #b7f0c8;
+  --color-green-950: #d4f7de;
+  --color-amber-50: #33270a;
+  --color-amber-100: #40310c;
+  --color-amber-300: #7a5a12;
+  --color-amber-400: #a87b16;
+  --color-amber-900: #fde3a7;
+  --color-amber-950: #feefc9;
+  --color-purple-100: #2e1f4a;
+  --color-purple-400: #7c5cc4;
+  --color-purple-900: #ddd0ff;
+  --color-purple-950: #ece5ff;
+  --achtergrond: #0d1117;
+  --tekst: #e6edf3;
+  --oppervlak: #161b22;
+  --vakantie-a: #2b2510;
+  --vakantie-b: #211c0c;
+  color-scheme: dark;
+  }
 }

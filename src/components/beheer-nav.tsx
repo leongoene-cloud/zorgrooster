@@ -29,7 +29,7 @@ export function BeheerNav() {
             aria-current={actief ? "page" : undefined}
             className={cn(
               "flex min-h-16 items-center justify-center rounded-xl border-2 px-5 text-lg font-semibold",
-              actief ? "border-blue-700 bg-blue-700 text-white" : "border-gray-300 bg-white text-gray-900 hover:bg-gray-100",
+              actief ? "border-blue-700 bg-blue-700 text-white" : "border-gray-300 bg-oppervlak text-gray-900 hover:bg-gray-100",
             )}
           >
             {i.label}

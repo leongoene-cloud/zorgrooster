@@ -12,7 +12,7 @@ function Teller({ n, label, href, slecht }: { n: number; label: string; href: st
   return (
     <Link
       href={href}
-      className={`flex min-h-28 flex-col justify-center rounded-2xl border-2 p-4 hover:shadow ${slecht && n > 0 ? "border-red-400 bg-red-50" : "border-gray-200 bg-white"}`}
+      className={`flex min-h-28 flex-col justify-center rounded-2xl border-2 p-4 hover:shadow ${slecht && n > 0 ? "border-red-400 bg-red-50" : "border-gray-200 bg-oppervlak"}`}
     >
       <span className="text-4xl font-bold">{n}</span>
       <span className="text-lg font-semibold">{label}</span>

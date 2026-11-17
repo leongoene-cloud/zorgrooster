@@ -22,7 +22,7 @@ export function Navigatie({ isAdmin }: { isAdmin: boolean }) {
             aria-current={actief ? "page" : undefined}
             className={cn(
               "flex min-h-14 min-w-24 flex-1 items-center justify-center rounded-xl border-2 px-4 text-lg font-bold sm:flex-none",
-              actief ? "border-white bg-white text-blue-800" : "border-blue-300/60 text-white hover:bg-blue-600",
+              actief ? "border-oppervlak bg-oppervlak text-blue-800" : "border-white/50 text-white hover:bg-blue-600",
             )}
           >
             {t.label}

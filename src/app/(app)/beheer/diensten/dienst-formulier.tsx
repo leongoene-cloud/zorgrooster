@@ -63,7 +63,7 @@ export function DienstFormulier({
               className={cn(
                 "flex min-h-16 cursor-pointer flex-col justify-center rounded-xl border-2 px-4 text-lg font-semibold",
                 "has-[:focus-visible]:outline has-[:focus-visible]:outline-4 has-[:focus-visible]:outline-amber-500",
-                type === t.type ? "border-blue-700 bg-blue-50 ring-2 ring-blue-700" : "border-gray-300 bg-white",
+                type === t.type ? "border-blue-700 bg-blue-50 ring-2 ring-blue-700" : "border-gray-300 bg-oppervlak",
               )}
             >
               <span className="flex items-center gap-3">

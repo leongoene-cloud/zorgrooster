@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { VerzendKnop } from "@/components/formulier";
+import { BevestigKnop, VerzendKnop } from "@/components/formulier";
 import { tijdenTekst } from "@/components/kalender";
 import { cn, Kaart, KleurBolletje, knopKlassen, LegeStaat, Melding, StatusBadge, invoerKlassen } from "@/components/ui";
 import { vereisLid } from "@/lib/auth";
 import { haalDiensten, haalVakanties, haalVerlofAanvragen, haalZorgverleners } from "@/lib/data";
 import { aantalDagen, periodeTekst, plusDagen, plusMaanden, tijdstipTekst, vandaag as vandaagFn } from "@/lib/datum";
 import { STATUS_LABEL, typeLabel, type VerlofAanvraag, type VerlofStatus } from "@/lib/types";
-import { annuleerVerlof, beoordeelVerlof, vraagVerlofAan } from "./actions";
+import { annuleerVerlof, beoordeelVerlof, verlofInplannen, verlofIntrekken, vraagVerlofAan } from "./actions";
+import { VerlofInplannen } from "./verlof-inplannen";
 import { VerlofFormulier } from "./verlof-formulier";
 
 export const metadata: Metadata = { title: "Verlof" };
@@ -16,10 +17,12 @@ const MELDINGEN: Record<string, string> = {
   aangevraagd: "Je verlofaanvraag is verstuurd. De status is nu “Aangevraagd”.",
   geannuleerd: "De aanvraag is geannuleerd.",
   afgekeurd: "De aanvraag is afgekeurd.",
+  ingetrokken: "Het verlof is ingetrokken. Eventuele markeringen ‘vervanging nodig’ zijn weggehaald.",
 };
 const FOUTEN: Record<string, string> = {
   annuleren: "Annuleren lukte niet. Misschien is de aanvraag al beoordeeld.",
   besluit: "Het besluit kon niet worden opgeslagen.",
+  intrekken: "Intrekken lukte niet. Misschien was het verlof al afgekeurd of geannuleerd.",
 };
 
 export default async function VerlofPagina({ searchParams }: PageProps<"/verlof">) {
@@ -40,6 +43,22 @@ export default async function VerlofPagina({ searchParams }: PageProps<"/verlof"
     <div className="flex flex-col gap-6">
       {typeof sp.melding === "string" && MELDINGEN[sp.melding] && <Melding soort="succes">{MELDINGEN[sp.melding]}</Melding>}
       {typeof sp.fout === "string" && FOUTEN[sp.fout] && <Melding soort="fout">{FOUTEN[sp.fout]}</Melding>}
+
+      {sessie.isAdmin && (
+        <Kaart titel="Verlof inplannen voor een zorgverlener">
+          <VerlofInplannen
+            actie={verlofInplannen}
+            vandaag={vandaag}
+            zorgverleners={zorgverleners}
+            diensten={(await haalDiensten(vandaag, plusDagen(vandaag, 400))).map((d) => ({
+              datum: d.datum,
+              zorgverlener_id: d.zorgverlener_id,
+              tekst: `${typeLabel(d.type)} ${tijdenTekst(d)}`,
+            }))}
+            vakanties={vakanties.map((v) => ({ naam: v.naam, start_datum: v.start_datum, eind_datum: v.eind_datum }))}
+          />
+        </Kaart>
+      )}
 
       {sessie.isAdmin && <Beoordelen zvMap={zvMap} sp={sp} />}
 
@@ -147,7 +166,7 @@ async function Beoordelen({
   const chip = (actief: boolean) =>
     cn(
       "inline-flex min-h-14 items-center gap-2 rounded-full border-2 px-4 text-base font-semibold",
-      actief ? "border-blue-700 bg-blue-700 text-white" : "border-gray-300 bg-white hover:bg-gray-100",
+      actief ? "border-blue-700 bg-blue-700 text-white" : "border-gray-300 bg-oppervlak hover:bg-gray-100",
     );
 
   return (
@@ -225,14 +244,15 @@ function HistorieTabel({ rijen, zvMap }: { rijen: VerlofAanvraag[]; zvMap: Map<s
   if (!rijen.length) return <LegeStaat>Geen aanvragen gevonden.</LegeStaat>;
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[640px] text-left text-base">
+      <table className="w-full min-w-[820px] text-left text-base">
         <thead>
           <tr className="border-b-2 border-gray-300">
             <th className="py-2 pr-3">Naam</th>
             <th className="py-2 pr-3">Periode</th>
             <th className="py-2 pr-3">Status</th>
             <th className="py-2 pr-3">Reden / opmerking</th>
-            <th className="py-2">Beoordeeld</th>
+            <th className="py-2 pr-3">Beoordeeld</th>
+            <th className="py-2">Actie</th>
           </tr>
         </thead>
         <tbody>
@@ -247,7 +267,19 @@ function HistorieTabel({ rijen, zvMap }: { rijen: VerlofAanvraag[]; zvMap: Map<s
                 {a.reden}
                 {a.opmerking_admin && <div className="text-gray-700">Beheerder: {a.opmerking_admin}</div>}
               </td>
-              <td className="py-2">{a.beoordeeld_op ? tijdstipTekst(a.beoordeeld_op) : "—"}</td>
+              <td className="py-2 pr-3">{a.beoordeeld_op ? tijdstipTekst(a.beoordeeld_op) : "—"}</td>
+              <td className="py-2">
+                {(a.status === "goedgekeurd" || a.status === "aangevraagd") && (
+                  <form action={verlofIntrekken}>
+                    <input type="hidden" name="id" value={a.id} />
+                    <BevestigKnop
+                      label="Intrekken"
+                      bevestigLabel="Ja, intrekken"
+                      vraag={`Verlof van ${zvMap.get(a.zorgverlener_id)?.naam ?? ""} intrekken?`}
+                    />
+                  </form>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

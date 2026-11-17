@@ -89,7 +89,7 @@ export function ImportScherm({ actie, zorgverleners }: { actie: Actie; zorgverle
             . Diensten die al precies zo bestaan, worden overgeslagen.
           </Melding>
           {fouten.length > 0 && (
-            <div className="rounded-xl border-2 border-amber-300 bg-white p-4">
+            <div className="rounded-xl border-2 border-amber-300 bg-oppervlak p-4">
               <p className="mb-2 font-bold">Regels met fouten</p>
               <ul className="list-disc pl-6">
                 {fouten.slice(0, 50).map((f, i) => (
@@ -103,7 +103,7 @@ export function ImportScherm({ actie, zorgverleners }: { actie: Actie; zorgverle
           )}
           {diensten.length > 0 && (
             <>
-              <div className="max-h-[28rem] overflow-auto rounded-xl border-2 border-gray-200 bg-white">
+              <div className="max-h-[28rem] overflow-auto rounded-xl border-2 border-gray-200 bg-oppervlak">
                 <table className="w-full text-left text-base">
                   <thead className="sticky top-0 bg-gray-100">
                     <tr>

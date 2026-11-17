@@ -107,7 +107,7 @@ export default async function LogPagina({ searchParams }: PageProps<"/beheer/log
   const chip = (actief: boolean) =>
     cn(
       "inline-flex min-h-14 items-center rounded-full border-2 px-5 text-lg font-semibold",
-      actief ? "border-blue-700 bg-blue-700 text-white" : "border-gray-300 bg-white hover:bg-gray-100",
+      actief ? "border-blue-700 bg-blue-700 text-white" : "border-gray-300 bg-oppervlak hover:bg-gray-100",
     );
 
   return (

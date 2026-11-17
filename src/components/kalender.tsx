@@ -43,7 +43,7 @@ function DienstKaartje({ d, zv, beheer }: { d: Dienst; zv?: ZorgverlenerPubliek;
     </>
   );
   const stijl = cn(
-    "flex flex-col rounded-lg border-2 border-l-[6px] bg-white px-2 py-1.5 text-left leading-snug",
+    "flex flex-col rounded-lg border-2 border-l-[6px] bg-oppervlak px-2 py-1.5 text-left leading-snug",
     d.vervanging_nodig ? "border-red-600" : "border-gray-200",
   );
   if (beheer) {
@@ -132,7 +132,7 @@ export function MaandKalender(p: Props) {
                     aria-label={datumLang(datum)}
                     className={cn(
                       "flex min-h-32 flex-col gap-1 rounded-xl border p-1.5",
-                      inMaand ? "border-gray-200 bg-white" : "border-gray-100 bg-gray-50 opacity-60",
+                      inMaand ? "border-gray-200 bg-oppervlak" : "border-gray-100 bg-gray-50 opacity-60",
                       vak && inMaand && "vakantie-achtergrond",
                       isVandaag && "ring-4 ring-blue-600",
                     )}
@@ -176,7 +176,7 @@ export function MaandKalender(p: Props) {
                 key={datum}
                 id={`dag-${datum}`}
                 className={cn(
-                  "rounded-xl border border-gray-200 bg-white p-3",
+                  "rounded-xl border border-gray-200 bg-oppervlak p-3",
                   vak && "vakantie-achtergrond",
                   isVandaag && "ring-4 ring-blue-600",
                 )}

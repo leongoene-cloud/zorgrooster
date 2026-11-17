@@ -10,10 +10,10 @@ export function cn(...klassen: (string | false | null | undefined)[]): string {
 export type KnopVariant = "primair" | "secundair" | "gevaar" | "succes" | "rustig";
 
 const VARIANTEN: Record<KnopVariant, string> = {
-  primair: "bg-blue-700 text-white hover:bg-blue-800 border-blue-700",
-  secundair: "bg-white text-gray-900 hover:bg-gray-100 border-gray-400",
-  gevaar: "bg-red-700 text-white hover:bg-red-800 border-red-700",
-  succes: "bg-green-700 text-white hover:bg-green-800 border-green-700",
+  primair: "bg-blue-700 text-white hover:bg-blue-600 border-blue-700",
+  secundair: "bg-oppervlak text-gray-900 hover:bg-gray-100 border-gray-400",
+  gevaar: "bg-red-700 text-white hover:bg-red-600 border-red-700",
+  succes: "bg-green-700 text-white hover:bg-green-600 border-green-700",
   rustig: "bg-gray-100 text-gray-900 hover:bg-gray-200 border-gray-300",
 };
 
@@ -48,7 +48,7 @@ export function KnopLink({
 
 export function Kaart({ children, className, titel, actie }: { children: ReactNode; className?: string; titel?: ReactNode; actie?: ReactNode }) {
   return (
-    <section className={cn("rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6", className)}>
+    <section className={cn("rounded-2xl border border-gray-200 bg-oppervlak p-4 shadow-sm sm:p-6", className)}>
       {(titel || actie) && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           {titel && <h2 className="text-xl font-bold">{titel}</h2>}
@@ -133,7 +133,7 @@ export function Veld({ label, hint, children, htmlFor }: { label: string; hint?:
 }
 
 export const invoerKlassen =
-  "min-h-14 w-full rounded-xl border-2 border-gray-400 bg-white px-4 text-lg text-gray-900 focus:border-blue-700";
+  "min-h-14 w-full rounded-xl border-2 border-gray-400 bg-oppervlak px-4 text-lg text-gray-900 focus:border-blue-700";
 
 /** Een groep keuzes als grote, aanklikbare tegels (radio-knoppen; geen dropdown) */
 export function KeuzeTegels({
@@ -159,7 +159,7 @@ export function KeuzeTegels({
           <label
             key={o.waarde}
             className={cn(
-              "flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border-2 border-gray-300 bg-white px-4 text-lg font-semibold",
+              "flex min-h-16 cursor-pointer items-center gap-3 rounded-xl border-2 border-gray-300 bg-oppervlak px-4 text-lg font-semibold",
               "has-[:checked]:border-blue-700 has-[:checked]:bg-blue-50 has-[:checked]:ring-2 has-[:checked]:ring-blue-700",
               "has-[:focus-visible]:outline has-[:focus-visible]:outline-4 has-[:focus-visible]:outline-amber-500",
             )}

@@ -5,6 +5,7 @@ Web-app waarin zorgverleners het maandrooster bekijken en verlof aanvragen, en d
 - **Next.js 16** (App Router, TypeScript, Tailwind 4) — hosting op Vercel
 - **Supabase** — Postgres, Row Level Security; beheerder logt in met wachtwoord, zorgverleners met een persoonlijke link
 - Interface in het Nederlands, tijdzone Europe/Amsterdam, weken beginnen op maandag
+- Lichte en donkere modus: volgt standaard het apparaat; met de knop in de kopbalk kies je zelf (wordt onthouden)
 - Beheerschermen geschikt voor oogbesturing: klikdoelen ≥ 56 px, alleen tekstknoppen, geen hover-menu's, geen slepen, geen dubbelklik, geen tijdslimieten; verwijderen gaat in twee stappen
 
 ## Wat zit erin
@@ -12,7 +13,7 @@ Web-app waarin zorgverleners het maandrooster bekijken en verlof aanvragen, en d
 | Tab | Voor wie | Inhoud |
 |---|---|---|
 | Rooster | iedereen | Maandkalender (op telefoon een lijst per dag), filter per persoon in de URL (`?zv=…&maand=2026-12`), knop *Mijn diensten* met totaal diensten en uren, schoolvakanties gearceerd, goedgekeurd verlof als label, export naar agenda (.ics) |
-| Verlof | iedereen | Verlof aanvragen (waarschuwt bij eigen diensten en schoolvakanties), eigen aanvragen met status en annuleren. Beheerder: beoordelen (goedkeuren/afkeuren met opmerking) en historie met filters. Schoolvakanties regio Midden voor de komende 12 maanden |
+| Verlof | iedereen | Verlof aanvragen (waarschuwt bij eigen diensten en schoolvakanties), eigen aanvragen met status en annuleren. Beheerder: verlof inplannen voor een zorgverlener (direct goedgekeurd), beoordelen (goedkeuren/afkeuren met opmerking), historie met filters en verlof intrekken. Schoolvakanties regio Midden voor de komende 12 maanden |
 | Beheer | beheerder | Rooster bewerken (klik op dag → formulier met datum ingevuld), weeksjabloon + *Vul maand vanuit sjabloon*, *Kopieer vorige week/maand* (altijd eerst een voorbeeld), controles (dubbele/overlappende diensten, dienst tijdens verlof, dagen zonder dagdienst of zonder nachtdienst), vervanging na goedgekeurd verlof, zorgverleners, urenoverzicht + Excel-export, eenmalige import uit Excel/CSV, schoolvakanties, wijzigingslog |
 
 **Uren:** per dienst afgerond op kwartieren; een dienst waarvan de eindtijd ≤ begintijd is loopt door tot de volgende dag (21:00–09:00 = 12 uur, ook in de nacht van de zomer/wintertijdwissel). Werkelijke tijden (bijv. uitloop) gaan vóór de geplande tijden. Een dienst telt mee in de maand waarin hij begint.

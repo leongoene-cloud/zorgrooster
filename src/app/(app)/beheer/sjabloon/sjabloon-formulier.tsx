@@ -27,7 +27,7 @@ export function SjabloonFormulier({
         <legend className="mb-2 text-lg font-semibold">Op welke dagen? (meerdere mogelijk)</legend>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
           {WEEKDAG_NAMEN.map((n, i) => (
-            <label key={n} className={cn(tegel, "border-gray-300 bg-white has-[:checked]:border-blue-700 has-[:checked]:bg-blue-50")}>
+            <label key={n} className={cn(tegel, "border-gray-300 bg-oppervlak has-[:checked]:border-blue-700 has-[:checked]:bg-blue-50")}>
               <input type="checkbox" name="weekdag" value={i + 1} className="h-6 w-6 accent-blue-700" />
               <span className="capitalize">{n}</span>
             </label>
@@ -43,7 +43,7 @@ export function SjabloonFormulier({
         <legend className="mb-2 text-lg font-semibold">Soort dienst</legend>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {DIENST_TYPES.map((t) => (
-            <label key={t.type} className={cn(tegel, type === t.type ? "border-blue-700 bg-blue-50 ring-2 ring-blue-700" : "border-gray-300 bg-white")}>
+            <label key={t.type} className={cn(tegel, type === t.type ? "border-blue-700 bg-blue-50 ring-2 ring-blue-700" : "border-gray-300 bg-oppervlak")}>
               <input
                 type="radio"
                 name="type"

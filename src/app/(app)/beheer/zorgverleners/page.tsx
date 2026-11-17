@@ -23,7 +23,7 @@ export default async function ZorgverlenersPagina({ searchParams }: PageProps<"/
             <Link
               href={`/beheer/zorgverleners/${z.id}`}
               className={cn(
-                "flex min-h-28 flex-col justify-center gap-1 rounded-2xl border-2 border-l-8 bg-white p-4 hover:bg-blue-50",
+                "flex min-h-28 flex-col justify-center gap-1 rounded-2xl border-2 border-l-8 bg-oppervlak p-4 hover:bg-blue-50",
                 !z.actief && "opacity-70",
               )}
               style={{ borderLeftColor: z.kleur }}

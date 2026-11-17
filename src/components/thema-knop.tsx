@@ -1,0 +1,37 @@
+"use client";
+
+import { useState, useSyncExternalStore } from "react";
+
+const VRAAG = "(prefers-color-scheme: dark)";
+
+function abonneer(cb: () => void) {
+  const mq = window.matchMedia(VRAAG);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+}
+
+/** Wissel tussen licht en donker. Zonder keuze volgt de app het apparaat. */
+export function ThemaKnop({ start }: { start: "licht" | "donker" | null }) {
+  const [keuze, setKeuze] = useState(start);
+  const systeemDonker = useSyncExternalStore(abonneer, () => window.matchMedia(VRAAG).matches, () => false);
+  const donker = keuze ? keuze === "donker" : systeemDonker;
+
+  function wissel() {
+    const nieuw = donker ? "licht" : "donker";
+    setKeuze(nieuw);
+    document.documentElement.classList.remove("licht", "donker");
+    document.documentElement.classList.add(nieuw);
+    document.cookie = `thema=${nieuw}; path=/; max-age=${400 * 24 * 3600}; samesite=lax`;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={wissel}
+      className="min-h-12 rounded-xl border-2 border-white/50 px-4 text-base font-semibold text-white hover:bg-blue-600"
+      aria-label={donker ? "Lichte modus aanzetten" : "Donkere modus aanzetten"}
+    >
+      {donker ? "☀️ Licht" : "🌙 Donker"}
+    </button>
+  );
+}

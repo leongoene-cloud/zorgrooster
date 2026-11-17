@@ -275,6 +275,31 @@ describe("verlof", () => {
   });
 });
 
+describe("beheerder plant verlof in", () => {
+  it("direct goedgekeurd verlof markeert diensten; intrekken haalt de markering weg", async () => {
+    await als("admin");
+    const v = await db.query(
+      `insert into public.verlof_aanvragen (zorgverlener_id, start_datum, eind_datum, status, opmerking_admin, beoordeeld_op)
+       values ($1, '2026-12-01', '2026-12-01', 'goedgekeurd', 'Ingepland door de beheerder', now()) returning id, status`,
+      [ids.anna.zv],
+    );
+    expect(v.rows[0].status).toBe("goedgekeurd");
+    const markering = async () =>
+      (await db.query("select vervanging_nodig from public.diensten where zorgverlener_id = $1", [ids.anna.zv])).rows[0].vervanging_nodig;
+    expect(await markering()).toBe(true);
+    await db.query("update public.verlof_aanvragen set status = 'geannuleerd' where id = $1", [v.rows[0].id]);
+    expect(await markering()).toBe(false);
+  });
+
+  it("een zorgverlener kan geen verlof voor een ander inplannen", async () => {
+    await als("bram");
+    await faalt(
+      `insert into public.verlof_aanvragen (zorgverlener_id, start_datum, eind_datum, status) values ($1, '2026-12-01', '2026-12-01', 'goedgekeurd')`,
+      [ids.anna.zv],
+    );
+  });
+});
+
 describe("zorgverleners, vakanties, sjablonen, log", () => {
   it("zorgverlener ziet via de view alleen naam en kleur, en kan niets wijzigen", async () => {
     await als("anna");
