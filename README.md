@@ -5,7 +5,7 @@ Web-app waarin zorgverleners het maandrooster bekijken en verlof aanvragen, en d
 - **Next.js 16** (App Router, TypeScript, Tailwind 4) — hosting op Vercel
 - **Supabase** — Postgres, Row Level Security; beheerder logt in met wachtwoord, zorgverleners met een persoonlijke link
 - Interface in het Nederlands, tijdzone Europe/Amsterdam, weken beginnen op maandag
-- Lichte en donkere modus: volgt standaard het apparaat; met de knop in de kopbalk kies je zelf (wordt onthouden)
+- Standaard donkere modus; met de knop Licht/Donker in de kopbalk kiest iedereen zelf (wordt per apparaat onthouden)
 - Beheerschermen geschikt voor oogbesturing: klikdoelen ≥ 56 px, alleen tekstknoppen, geen hover-menu's, geen slepen, geen dubbelklik, geen tijdslimieten; verwijderen gaat in twee stappen
 
 ## Wat zit erin

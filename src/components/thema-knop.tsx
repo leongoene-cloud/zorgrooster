@@ -1,20 +1,11 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 
-const VRAAG = "(prefers-color-scheme: dark)";
-
-function abonneer(cb: () => void) {
-  const mq = window.matchMedia(VRAAG);
-  mq.addEventListener("change", cb);
-  return () => mq.removeEventListener("change", cb);
-}
-
-/** Wissel tussen licht en donker. Zonder keuze volgt de app het apparaat. */
-export function ThemaKnop({ start }: { start: "licht" | "donker" | null }) {
+/** Wissel tussen licht en donker (standaard donker); de keuze wordt per apparaat onthouden. */
+export function ThemaKnop({ start }: { start: "licht" | "donker" }) {
   const [keuze, setKeuze] = useState(start);
-  const systeemDonker = useSyncExternalStore(abonneer, () => window.matchMedia(VRAAG).matches, () => false);
-  const donker = keuze ? keuze === "donker" : systeemDonker;
+  const donker = keuze === "donker";
 
   function wissel() {
     const nieuw = donker ? "licht" : "donker";
