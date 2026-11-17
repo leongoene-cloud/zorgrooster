@@ -35,6 +35,8 @@ Web-app waarin zorgverleners het maandrooster bekijken en verlof aanvragen, en d
    - `supabase/migrations/20261117000001_schema.sql`
    - `supabase/migrations/20261117000002_vervang_diensten.sql`
    - `supabase/migrations/20261117000003_persoonlijke_links.sql`
+   - `supabase/migrations/20261118000004_sjabloon_om_de_week.sql`
+   - `supabase/migrations/20261118000005_verlof_team.sql`
    - `supabase/seed.sql` — **verander eerst `admin@example.com` in je eigen e-mailadres** en haal de testzorgverleners weg als je die niet wilt.
 3. **Authentication → Users → Add user → Create new user**: vul hetzelfde e-mailadres in, kies je beheerwachtwoord en vink *Auto Confirm User* aan.
 4. **Authentication → Sign In / Providers**: zet *Allow new users to sign up* **uit**. Zo kan niemand anders een account aanmaken.
@@ -62,6 +64,10 @@ npm run dev
 2. **Beheer → Zorgverleners**: voeg iedereen toe (naam en kleur; e-mail is niet nodig). Klik op een naam → **Persoonlijke link maken** → **Stuur via WhatsApp**.
 3. **Beheer → Import**: zet eenmalig het huidige Excel-rooster over (kolommen `datum, naam, type, start, eind`; meerdere tabbladen mag; voorbeeld in `public/import-voorbeeld.csv`).
 4. **Beheer → Weeksjabloon**: leg het vaste weekpatroon vast en vul daarmee voortaan elke maand.
+
+## Database bijwerken
+
+Na een update van de app kan er een nieuw bestand in `supabase/migrations/` staan. Voer de nieuwe bestanden (in volgorde) uit in Supabase → **SQL Editor**. Alle migraties vanaf `20261118…` zijn veilig om opnieuw te draaien. Een pagina die na een update een foutmelding geeft, wijst meestal op een migratie die nog niet is uitgevoerd.
 
 ## Beveiliging
 
