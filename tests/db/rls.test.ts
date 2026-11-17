@@ -321,3 +321,94 @@ describe("zorgverleners, vakanties, sjablonen, log", () => {
     expect(log.rows[0]).toEqual({ user_id: ids.admin.user, actie: "update" });
   });
 });
+
+describe("persoonlijke link (zorgverlener zonder account)", () => {
+  async function maakLink(wie: "anna" | "bram") {
+    await als("admin");
+    const r = await db.query("select public.nieuwe_toegangslink($1) as t", [ids[wie].zv]);
+    return r.rows[0].t as string;
+  }
+
+  it("alleen de admin kan een link maken; in de database staat alleen de hash", async () => {
+    await als("anna");
+    await faalt("select public.nieuwe_toegangslink($1)", [ids.anna.zv]);
+    await als("anoniem");
+    await faalt("select public.nieuwe_toegangslink($1)", [ids.anna.zv]);
+    const token = await maakLink("anna");
+    expect(token).toMatch(/^[0-9a-f]{64}$/);
+    await alsPostgres();
+    const r = await db.query("select toegang_hash from public.zorgverleners where id = $1", [ids.anna.zv]);
+    expect(r.rows[0].toegang_hash).not.toBe(token);
+  });
+
+  it("anoniem zonder geldige link krijgt niets, en kan de tabellen niet direct lezen", async () => {
+    await maakLink("anna");
+    await als("anoniem");
+    expect((await db.query("select * from public.zv_diensten('fout-fout-fout-fout-fout-fout-fout-fout', '2026-12-01', '2026-12-31')")).rowCount).toBe(0);
+    expect((await db.query("select * from public.zv_sessie('')")).rowCount).toBe(0);
+    expect((await db.query("select * from public.zv_zorgverleners(null)")).rowCount).toBe(0);
+    await faalt("select public.zv_uit_token('x')");
+    await faalt("select * from public.diensten");
+    await faalt("select * from public.verlof_aanvragen");
+  });
+
+  it("met link: rooster lezen, alleen naam/kleur van anderen", async () => {
+    const token = await maakLink("anna");
+    await als("anoniem");
+    const s = await db.query("select * from public.zv_sessie($1)", [token]);
+    expect(s.rows[0]).toMatchObject({ id: ids.anna.zv });
+    expect((await db.query("select * from public.zv_diensten($1, '2026-12-01', '2026-12-31')", [token])).rowCount).toBe(2);
+    const zv = await db.query("select * from public.zv_zorgverleners($1)", [token]);
+    expect(Object.keys(zv.rows[0]).sort()).toEqual(["actief", "id", "kleur", "naam"]);
+    expect((await db.query("select * from public.zv_vakanties($1, '2026-11-17', '2027-11-17')", [token])).rowCount).toBe(5);
+  });
+
+  it("met link: eigen verlof aanvragen (altijd 'aangevraagd') en annuleren, niet dat van een ander", async () => {
+    const anna = await maakLink("anna");
+    const bram = await maakLink("bram");
+    await als("anoniem");
+    const id = (await db.query("select public.zv_verlof_aanvragen($1, '2026-12-01', '2026-12-02', 'test') as id", [anna])).rows[0].id;
+    const mijn = await db.query("select * from public.zv_mijn_verlof($1)", [anna]);
+    expect(mijn.rows[0]).toMatchObject({ id, status: "aangevraagd" });
+    expect((await db.query("select * from public.zv_mijn_verlof($1)", [bram])).rowCount).toBe(0);
+    await faalt("select public.zv_verlof_aanvragen($1, '2026-12-05', '2026-12-01')", [anna]);
+
+    // Bram kan Anna's aanvraag niet annuleren
+    expect((await db.query("select public.zv_verlof_annuleren($1, $2) as ok", [bram, id])).rows[0].ok).toBe(false);
+    expect((await db.query("select public.zv_verlof_annuleren($1, $2) as ok", [anna, id])).rows[0].ok).toBe(true);
+    // al geannuleerd → nog een keer kan niet
+    expect((await db.query("select public.zv_verlof_annuleren($1, $2) as ok", [anna, id])).rows[0].ok).toBe(false);
+
+    await alsPostgres();
+    const log = await db.query("select zorgverlener_id from public.audit_log where tabel = 'verlof_aanvragen' order by id desc limit 1");
+    expect(log.rows[0].zorgverlener_id).toBe(ids.anna.zv);
+  });
+
+  it("goedgekeurd verlof van anderen is zichtbaar zonder reden", async () => {
+    const anna = await maakLink("anna");
+    const bram = await maakLink("bram");
+    await als("anoniem");
+    const id = (await db.query("select public.zv_verlof_aanvragen($1, '2026-12-01', '2026-12-01', 'privé') as id", [anna])).rows[0].id;
+    await als("admin");
+    await db.query("update public.verlof_aanvragen set status = 'goedgekeurd' where id = $1", [id]);
+    await als("anoniem");
+    const v = await db.query("select * from public.zv_verlof_goedgekeurd($1, '2026-12-01', '2026-12-31')", [bram]);
+    expect(v.rowCount).toBe(1);
+    expect(Object.keys(v.rows[0])).not.toContain("reden");
+  });
+
+  it("nieuwe link of deactiveren maakt de oude link ongeldig", async () => {
+    const oud = await maakLink("anna");
+    const nieuw = await maakLink("anna");
+    await als("anoniem");
+    expect((await db.query("select * from public.zv_sessie($1)", [oud])).rowCount).toBe(0);
+    expect((await db.query("select * from public.zv_sessie($1)", [nieuw])).rowCount).toBe(1);
+    await alsPostgres();
+    await db.query("update public.zorgverleners set actief = false where id = $1", [ids.anna.zv]);
+    await als("anoniem");
+    expect((await db.query("select * from public.zv_sessie($1)", [nieuw])).rowCount).toBe(0);
+    await faalt("select public.zv_verlof_aanvragen($1, '2026-12-01', '2026-12-01')", [nieuw]);
+    await als("admin");
+    await db.query("select public.trek_toegangslink_in($1)", [ids.bram.zv]);
+  });
+});

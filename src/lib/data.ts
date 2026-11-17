@@ -1,4 +1,5 @@
 import "server-only";
+import { huidigeSessie } from "./auth";
 import { createClient } from "./supabase/server";
 import type {
   Dienst,
@@ -13,6 +14,12 @@ import type {
 const DIENST_KOLOMMEN =
   "id, zorgverlener_id, datum, type, start_tijd, eind_tijd, werkelijke_start, werkelijke_eind, vervanging_nodig, notitie";
 
+/** Link-code als de bezoeker een zorgverlener is (dan gaan vragen via de zv_-functies) */
+async function linkToken(): Promise<string | null> {
+  const s = await huidigeSessie();
+  return s?.soort === "zorgverlener" ? s.token : null;
+}
+
 function check<T>(res: { data: T | null; error: { message: string } | null }): T {
   if (res.error) throw new Error(`Databasefout: ${res.error.message}`);
   return res.data as T;
@@ -20,6 +27,8 @@ function check<T>(res: { data: T | null; error: { message: string } | null }): T
 
 export async function haalZorgverleners(): Promise<ZorgverlenerPubliek[]> {
   const sb = await createClient();
+  const token = await linkToken();
+  if (token) return check(await sb.rpc("zv_zorgverleners", { p_token: token }));
   return check(await sb.from("zorgverleners_publiek").select("id, naam, kleur, actief").order("naam"));
 }
 
@@ -27,12 +36,15 @@ export async function haalZorgverleners(): Promise<ZorgverlenerPubliek[]> {
 export async function haalZorgverlenersVolledig(): Promise<Zorgverlener[]> {
   const sb = await createClient();
   return check(
-    await sb.from("zorgverleners").select("id, naam, email, kleur, actief, rol, user_id").order("actief", { ascending: false }).order("naam"),
+    await sb.from("zorgverleners").select("id, naam, email, kleur, actief, rol, user_id, toegang_aangemaakt").order("actief", { ascending: false }).order("naam"),
   );
 }
 
 export async function haalDiensten(van: string, tot: string, zorgverlenerId?: string): Promise<Dienst[]> {
   const sb = await createClient();
+  const token = await linkToken();
+  if (token)
+    return check(await sb.rpc("zv_diensten", { p_token: token, p_van: van, p_tot: tot, p_zorgverlener_id: zorgverlenerId ?? null }));
   let q = sb.from("diensten").select(DIENST_KOLOMMEN).gte("datum", van).lte("datum", tot);
   if (zorgverlenerId) q = q.eq("zorgverlener_id", zorgverlenerId);
   return check(await q.order("datum").order("start_tijd"));
@@ -50,6 +62,8 @@ export async function haalDienstenVervangingNodig(): Promise<Dienst[]> {
 
 export async function haalGoedgekeurdVerlof(van: string, tot: string): Promise<VerlofPeriode[]> {
   const sb = await createClient();
+  const token = await linkToken();
+  if (token) return check(await sb.rpc("zv_verlof_goedgekeurd", { p_token: token, p_van: van, p_tot: tot }));
   return check(
     await sb
       .from("verlof_goedgekeurd")
@@ -59,8 +73,14 @@ export async function haalGoedgekeurdVerlof(van: string, tot: string): Promise<V
   );
 }
 
+/** Beheerder: alle (gefilterde) aanvragen. Zorgverlener: altijd alleen de eigen aanvragen. */
 export async function haalVerlofAanvragen(opties: { zorgverlenerId?: string; status?: string } = {}): Promise<VerlofAanvraag[]> {
   const sb = await createClient();
+  const token = await linkToken();
+  if (token) {
+    const eigen: VerlofAanvraag[] = check(await sb.rpc("zv_mijn_verlof", { p_token: token }));
+    return opties.status ? eigen.filter((a) => a.status === opties.status) : eigen;
+  }
   let q = sb
     .from("verlof_aanvragen")
     .select("id, zorgverlener_id, start_datum, eind_datum, reden, status, opmerking_admin, aangevraagd_op, beoordeeld_op");
@@ -71,6 +91,8 @@ export async function haalVerlofAanvragen(opties: { zorgverlenerId?: string; sta
 
 export async function haalVakanties(van: string, tot: string, regio = "midden"): Promise<Schoolvakantie[]> {
   const sb = await createClient();
+  const token = await linkToken();
+  if (token) return check(await sb.rpc("zv_vakanties", { p_token: token, p_van: van, p_tot: tot, p_regio: regio }));
   return check(
     await sb
       .from("schoolvakanties")

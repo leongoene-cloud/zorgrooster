@@ -13,17 +13,17 @@ RUN=""
 [ "$USER_NAME" = "root" ] && RUN="runuser -u postgres --"   # Postgres weigert als root te draaien
 SOCK=/tmp
 
-if [ -f "$DATA/postmaster.pid" ]; then
-  $RUN "$PGBIN/pg_ctl" -D "$DATA" stop -m fast >/dev/null || true
+if [ ! -f "$DATA/PG_VERSION" ]; then
+  mkdir -p "$DATA"
+  [ -n "$RUN" ] && chown postgres:postgres "$DATA"
+  $RUN "$PGBIN/initdb" -D "$DATA" -U postgres -A trust >/dev/null
 fi
-rm -rf "$DATA"
-mkdir -p "$DATA"
-[ -n "$RUN" ] && chown postgres:postgres "$DATA"
-
-$RUN "$PGBIN/initdb" -D "$DATA" -U postgres -A trust >/dev/null
-$RUN "$PGBIN/pg_ctl" -D "$DATA" -o "-p $PORT -k $SOCK -c listen_addresses=localhost" -l "$DATA/log.txt" start >/dev/null
+if ! $RUN "$PGBIN/pg_ctl" -D "$DATA" status >/dev/null 2>&1; then
+  $RUN "$PGBIN/pg_ctl" -D "$DATA" -o "-p $PORT -k $SOCK -c listen_addresses=localhost" -l "$DATA/log.txt" start >/dev/null
+fi
 
 PSQL="psql -h localhost -p $PORT -U postgres -v ON_ERROR_STOP=1 -q"
+$PSQL -c "drop database if exists zorgrooster_test with (force)"
 $PSQL -c "create database zorgrooster_test"
 $PSQL -d zorgrooster_test -f scripts/test-db/auth-stub.sql
 for f in supabase/migrations/*.sql; do

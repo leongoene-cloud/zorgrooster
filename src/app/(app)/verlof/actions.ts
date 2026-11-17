@@ -16,30 +16,35 @@ export async function vraagVerlofAan(_: ActieStatus, data: FormData): Promise<Ac
   if (eind < start) return { fout: "De einddatum mag niet vóór de startdatum liggen." };
 
   const supabase = await createClient();
-  const { error } = await supabase.from("verlof_aanvragen").insert({
-    zorgverlener_id: sessie.zorgverlener.id,
-    start_datum: start,
-    eind_datum: eind,
-    reden,
-  });
+  const { error } =
+    sessie.soort === "zorgverlener"
+      ? await supabase.rpc("zv_verlof_aanvragen", { p_token: sessie.token, p_start: start, p_eind: eind, p_reden: reden })
+      : await supabase.from("verlof_aanvragen").insert({ zorgverlener_id: sessie.zorgverlener.id, start_datum: start, eind_datum: eind, reden });
   if (error) return { fout: `Opslaan lukte niet: ${error.message}` };
   revalidatePath("/verlof");
   redirect("/verlof?melding=aangevraagd");
 }
 
 export async function annuleerVerlof(data: FormData) {
-  await vereisLid();
+  const sessie = await vereisLid();
   const id = String(data.get("id") ?? "");
   const supabase = await createClient();
-  const { data: rij, error } = await supabase
-    .from("verlof_aanvragen")
-    .update({ status: "geannuleerd" })
-    .eq("id", id)
-    .eq("status", "aangevraagd")
-    .select("id")
-    .maybeSingle();
+  let gelukt: boolean;
+  if (sessie.soort === "zorgverlener") {
+    const { data: ok, error } = await supabase.rpc("zv_verlof_annuleren", { p_token: sessie.token, p_id: id });
+    gelukt = !error && ok === true;
+  } else {
+    const { data: rij, error } = await supabase
+      .from("verlof_aanvragen")
+      .update({ status: "geannuleerd" })
+      .eq("id", id)
+      .eq("status", "aangevraagd")
+      .select("id")
+      .maybeSingle();
+    gelukt = !error && Boolean(rij);
+  }
   revalidatePath("/verlof");
-  redirect(error || !rij ? "/verlof?fout=annuleren" : "/verlof?melding=geannuleerd");
+  redirect(gelukt ? "/verlof?melding=geannuleerd" : "/verlof?fout=annuleren");
 }
 
 export async function beoordeelVerlof(data: FormData) {

@@ -10,9 +10,10 @@ export interface ZorgverlenerPubliek {
 }
 
 export interface Zorgverlener extends ZorgverlenerPubliek {
-  email: string;
+  email: string | null;
   rol: Rol;
   user_id: string | null;
+  toegang_aangemaakt: string | null;
 }
 
 export interface Dienst {

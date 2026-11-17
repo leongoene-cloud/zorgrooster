@@ -25,8 +25,8 @@ export function ZorgverlenerFormulier({ zv }: { zv?: Zorgverlener }) {
       <Veld label="Naam" htmlFor="naam">
         <input id="naam" name="naam" required maxLength={80} defaultValue={zv?.naam} className={invoerKlassen} />
       </Veld>
-      <Veld label="E-mailadres (hiermee logt de persoon in)" htmlFor="email">
-        <input id="email" name="email" type="email" required defaultValue={zv?.email} className={invoerKlassen} />
+      <Veld label="E-mailadres (niet verplicht)" htmlFor="email" hint="Alleen nodig voor de beheerder. Zorgverleners openen de app met hun persoonlijke link.">
+        <input id="email" name="email" type="email" defaultValue={zv?.email ?? ""} className={invoerKlassen} />
       </Veld>
       <KeuzeTegels
         name="kleur"
@@ -50,8 +50,8 @@ export function ZorgverlenerFormulier({ zv }: { zv?: Zorgverlener }) {
         legend="Status"
         standaard={zv && !zv.actief ? "nee" : "ja"}
         opties={[
-          { waarde: "ja", label: "Actief (kan inloggen)" },
-          { waarde: "nee", label: "Gedeactiveerd" },
+          { waarde: "ja", label: "Actief (link werkt)" },
+          { waarde: "nee", label: "Gedeactiveerd (geen toegang)" },
         ]}
         kolommen="grid-cols-1 sm:grid-cols-2"
       />

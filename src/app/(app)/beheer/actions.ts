@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ActieStatus } from "@/components/formulier";
 import { vereisAdmin } from "@/lib/auth";
@@ -108,12 +109,13 @@ export async function bewaarZorgverlener(_: ActieStatus, data: FormData): Promis
   const sessie = await vereisAdmin();
   const id = tekst(data, "id");
   const naam = tekst(data, "naam").slice(0, 80);
-  const email = tekst(data, "email").toLowerCase();
+  const email = tekst(data, "email").toLowerCase() || null;
   const kleur = tekst(data, "kleur");
   const rol = tekst(data, "rol") === "admin" ? "admin" : "zorgverlener";
   const actief = tekst(data, "actief") !== "nee";
   if (!naam) return { fout: "Vul een naam in." };
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { fout: "Vul een geldig e-mailadres in." };
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { fout: "Dit e-mailadres is niet geldig." };
+  if (rol === "admin" && !email) return { fout: "Een beheerder heeft een e-mailadres nodig." };
   if (!/^#[0-9a-fA-F]{6}$/.test(kleur)) return { fout: "Kies een kleur." };
   if (id === sessie.zorgverlener.id && (!actief || rol !== "admin"))
     return { fout: "Je kunt jezelf niet deactiveren of je beheerrechten afnemen." };
@@ -129,6 +131,35 @@ export async function bewaarZorgverlener(_: ActieStatus, data: FormData): Promis
   }
   vernieuw();
   redirect("/beheer/zorgverleners?melding=opgeslagen");
+}
+
+// ---------------------------------------------------------------- persoonlijke links
+
+async function siteUrl(): Promise<string> {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+  const h = await headers();
+  return `${h.get("x-forwarded-proto") ?? "https"}://${h.get("x-forwarded-host") ?? h.get("host")}`;
+}
+
+/** Maakt een nieuwe persoonlijke link; de vorige link stopt meteen met werken */
+export async function maakToegangslink(_: { fout?: string; link?: string } | undefined, data: FormData) {
+  await vereisAdmin();
+  const id = tekst(data, "id");
+  if (!UUID.test(id)) return { fout: "Onbekende zorgverlener." };
+  const supabase = await createClient();
+  const { data: code, error } = await supabase.rpc("nieuwe_toegangslink", { p_zorgverlener_id: id });
+  if (error || typeof code !== "string") return { fout: "De link kon niet worden gemaakt." };
+  revalidatePath("/beheer/zorgverleners");
+  return { link: `${await siteUrl()}/z/${code}` };
+}
+
+export async function trekToegangslinkIn(data: FormData) {
+  await vereisAdmin();
+  const id = tekst(data, "id");
+  const supabase = await createClient();
+  await supabase.rpc("trek_toegangslink_in", { p_zorgverlener_id: id });
+  vernieuw();
+  redirect(`/beheer/zorgverleners/${id}?melding=ingetrokken`);
 }
 
 // ---------------------------------------------------------------- sjabloon

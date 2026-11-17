@@ -1,11 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isTokenVorm, ZV_COOKIE } from "@/lib/toegang";
 
-const OPENBAAR = ["/login", "/auth"];
+const OPENBAAR = ["/login", "/z/"];
 
 /**
- * Ververst de Supabase-sessie, stuurt niet-ingelogde bezoekers naar /login
- * en houdt niet-beheerders weg bij /beheer. (De echte beveiliging zit in RLS.)
+ * Ververst de sessie van de beheerder, laat zorgverleners met een geldige link-cookie door
+ * en stuurt verder iedereen naar /login. De echte controle zit in de database.
  */
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -28,31 +29,38 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  const { data } = await supabase.auth.getClaims();
-  const ingelogd = Boolean(data?.claims?.sub);
   const pad = request.nextUrl.pathname;
-
-  const doorsturen = (naar: string) => {
+  const doorsturen = (naar: string, zonderLink = false) => {
     const doel = request.nextUrl.clone();
-    doel.pathname = naar;
-    doel.search = "";
+    const [p, q] = naar.split("?");
+    doel.pathname = p;
+    doel.search = q ? `?${q}` : "";
     const r = NextResponse.redirect(doel);
     response.cookies.getAll().forEach((c) => r.cookies.set(c));
+    if (zonderLink) r.cookies.delete(ZV_COOKIE);
     return r;
   };
 
-  if (!ingelogd && !OPENBAAR.some((p) => pad.startsWith(p))) {
-    return doorsturen("/login");
+  if (OPENBAAR.some((p) => pad.startsWith(p))) return response;
+
+  const { data } = await supabase.auth.getClaims();
+  if (data?.claims?.sub) {
+    // Ingelogd met wachtwoord = beheerder
+    if (pad.startsWith("/beheer")) {
+      const { data: admin } = await supabase.rpc("is_admin");
+      if (!admin) return doorsturen("/rooster");
+    }
+    return response;
   }
 
-  if (ingelogd && pad.startsWith("/beheer")) {
-    const { data: admin } = await supabase.rpc("is_admin");
-    if (!admin) return doorsturen("/rooster");
-  }
-
+  const token = request.cookies.get(ZV_COOKIE)?.value;
+  if (!isTokenVorm(token)) return doorsturen("/login");
+  const { data: zv } = await supabase.rpc("zv_sessie", { p_token: token });
+  if (!Array.isArray(zv) || zv.length === 0) return doorsturen("/login?fout=link-ongeldig", true);
+  if (pad.startsWith("/beheer")) return doorsturen("/rooster");
   return response;
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|csv)$).*)"],
 };

@@ -3,7 +3,7 @@
 Web-app waarin zorgverleners het maandrooster bekijken en verlof aanvragen, en de beheerder het rooster, verlof, vervanging en uren regelt. Vervangt het Excel-rooster.
 
 - **Next.js 16** (App Router, TypeScript, Tailwind 4) — hosting op Vercel
-- **Supabase** — Postgres, inloggen met magic link/code, Row Level Security
+- **Supabase** — Postgres, Row Level Security; beheerder logt in met wachtwoord, zorgverleners met een persoonlijke link
 - Interface in het Nederlands, tijdzone Europe/Amsterdam, weken beginnen op maandag
 - Beheerschermen geschikt voor oogbesturing: klikdoelen ≥ 56 px, alleen tekstknoppen, geen hover-menu's, geen slepen, geen dubbelklik, geen tijdslimieten; verwijderen gaat in twee stappen
 
@@ -19,6 +19,12 @@ Web-app waarin zorgverleners het maandrooster bekijken en verlof aanvragen, en d
 
 **Na goedkeuring van verlof** worden de diensten van die persoon in de periode gemarkeerd als *Vervanging nodig* (rood in de kalender) en zie je direct de lijst met per dienst *Wijs andere zorgverlener toe*. De keuzelijst laat zien wie beschikbaar is.
 
+## Inloggen
+
+- **Zorgverleners** hebben geen account, wachtwoord of e-mail nodig. Ze krijgen van de beheerder een **persoonlijke link** (bijv. via WhatsApp). Die opent hun eigen diensten; daarna onthoudt de telefoon de toegang (ruim een jaar, elk gebruik van de link verlengt dit). Tip: zet de pagina op het beginscherm.
+- **De beheerder** logt in met **alleen een wachtwoord** (het bijbehorende e-mailadres staat in `ADMIN_EMAIL` op de server). Op je eigen computer blijf je ingelogd.
+- Link kwijt of telefoon gestolen? *Beheer → Zorgverleners → naam → Nieuwe link maken*: de oude link werkt dan meteen niet meer. *Link intrekken* of *Gedeactiveerd* sluit iemand helemaal af.
+
 ## Installeren
 
 ### 1. Supabase
@@ -27,21 +33,13 @@ Web-app waarin zorgverleners het maandrooster bekijken en verlof aanvragen, en d
 2. Open **SQL Editor** en voer achtereenvolgens uit:
    - `supabase/migrations/20261117000001_schema.sql`
    - `supabase/migrations/20261117000002_vervang_diensten.sql`
+   - `supabase/migrations/20261117000003_persoonlijke_links.sql`
    - `supabase/seed.sql` — **verander eerst `admin@example.com` in je eigen e-mailadres** en haal de testzorgverleners weg als je die niet wilt.
+3. **Authentication → Users → Add user → Create new user**: vul hetzelfde e-mailadres in, kies je beheerwachtwoord en vink *Auto Confirm User* aan.
+4. **Authentication → Sign In / Providers**: zet *Allow new users to sign up* **uit**. Zo kan niemand anders een account aanmaken.
+5. Noteer onder **Project Settings → API** de *Project URL* en de *publishable key* (of *anon key*).
 
-   (Of met de Supabase CLI: `supabase link` en `supabase db push`, daarna de seed.)
-3. **Authentication → Sign In / Providers → Email**: laat *Email* aan. *Allow new users to sign up* moet aan blijven: een database-trigger laat alleen e-mailadressen toe die in de tabel `zorgverleners` staan (geen open registratie).
-4. **Authentication → URL Configuration**: zet *Site URL* op het adres van de app (bijv. `https://zorgrooster.vercel.app`) en voeg `https://zorgrooster.vercel.app/auth/confirm` toe bij *Redirect URLs* (en `http://localhost:3000/auth/confirm` voor lokaal).
-5. **Authentication → Emails → Magic Link**: vervang de template, zodat de link ook werkt als iemand hem op een ander apparaat opent:
-
-   ```html
-   <h2>Inloggen bij het zorgrooster</h2>
-   <p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email">Klik hier om in te loggen</a></p>
-   <p>Of vul deze code in op de inlogpagina: <strong>{{ .Token }}</strong></p>
-   ```
-
-   Doe hetzelfde voor de template **Confirm signup** (die wordt gebruikt bij de allereerste keer inloggen).
-6. Aanrader: stel onder **Authentication → Emails → SMTP Settings** een eigen mailserver in (bijv. Resend). De ingebouwde mail van Supabase is beperkt tot een paar berichten per uur.
+E-mailinstellingen (templates, SMTP) zijn niet nodig: de app verstuurt geen e-mail.
 
 ### 2. Lokaal draaien
 
@@ -53,26 +51,25 @@ npm run dev
 
 ### 3. Deploy naar Vercel
 
-1. Zet de code in een GitHub-repository en importeer die in Vercel.
-2. Voeg bij *Environment Variables* toe: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` en `NEXT_PUBLIC_SITE_URL`.
-3. Deploy, en controleer dat de Site URL en Redirect URL in Supabase overeenkomen met het Vercel-adres.
+1. Importeer de GitHub-repository in Vercel.
+2. Voeg bij *Environment Variables* toe: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SITE_URL` (het Vercel-adres) en `ADMIN_EMAIL`.
+3. Deploy. Weet je het adres pas na de eerste deploy, vul dan `NEXT_PUBLIC_SITE_URL` in en kies *Redeploy*.
 
 ### 4. Aan de slag
 
-1. Log in met het beheerdersadres uit de seed.
-2. **Beheer → Zorgverleners**: voeg iedereen toe met naam, e-mail en kleur. Wie je deactiveert kan niet meer inloggen; oude diensten en uren blijven bewaard.
+1. Ga naar het adres van de app en log in met je wachtwoord.
+2. **Beheer → Zorgverleners**: voeg iedereen toe (naam en kleur; e-mail is niet nodig). Klik op een naam → **Persoonlijke link maken** → **Stuur via WhatsApp**.
 3. **Beheer → Import**: zet eenmalig het huidige Excel-rooster over (kolommen `datum, naam, type, start, eind`; meerdere tabbladen mag; voorbeeld in `public/import-voorbeeld.csv`).
 4. **Beheer → Weeksjabloon**: leg het vaste weekpatroon vast en vul daarmee voortaan elke maand.
 
 ## Beveiliging
 
-De echte beveiliging zit in de database (Row Level Security), niet in de interface:
+De echte beveiliging zit in de database, niet in de interface:
 
-- Diensten, schoolvakanties en namen/kleuren: lezen voor ingelogde, actieve zorgverleners; schrijven alleen door de beheerder.
-- E-mailadressen en rollen van anderen zijn niet zichtbaar voor zorgverleners (view `zorgverleners_publiek` toont alleen naam en kleur).
-- Verlof: eigen aanvragen lezen, aanmaken (status wordt altijd *aangevraagd*, afgedwongen door een trigger) en annuleren zolang ze open staan. Goedgekeurd verlof van anderen is zichtbaar zonder reden (view `verlof_goedgekeurd`).
-- Elke wijziging komt via triggers in `audit_log` (alleen leesbaar voor de beheerder).
-- Nieuwe gebruikers worden geweigerd als hun e-mailadres niet in `zorgverleners` staat; de inlogpagina zegt niet of een adres bekend is.
+- De beheerder werkt via Row Level Security: alleen een ingelogde, actieve beheerder mag schrijven.
+- Een persoonlijke link is een willekeurige code van 64 tekens. In de database staat alleen de hash ervan. Bezoekers zonder wachtwoord hebben géén toegang tot de tabellen; ze kunnen alleen een paar databasefuncties aanroepen die bij elke aanroep de code controleren. Met een geldige code kun je uitsluitend: het rooster, namen/kleuren, schoolvakanties en goedgekeurd verlof (zonder reden) lezen, en je **eigen** verlof aanvragen (altijd status *aangevraagd*) en annuleren zolang het open staat.
+- De link-code staat op de telefoon in een beveiligde cookie (niet leesbaar voor scripts).
+- Elke wijziging komt via triggers in het wijzigingslog, ook verlof dat via een persoonlijke link is aangevraagd.
 
 ## Tests
 
@@ -86,7 +83,7 @@ RLS-tests tegen een echte Postgres 16 met dezelfde migraties (zonder Docker):
 
 ```bash
 scripts/test-db/start.sh   # start een tijdelijke Postgres op poort 54329 met schema + seed
-npm run test:db            # 19 tests: wat zorgverleners wel/niet mogen, verlof, registratie, auditlog
+npm run test:db            # 25 tests: rechten van beheerder, links en anonieme bezoekers, verlof, auditlog
 ```
 
 ## Instellingen in de code

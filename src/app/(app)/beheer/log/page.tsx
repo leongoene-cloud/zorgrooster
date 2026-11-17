@@ -42,12 +42,13 @@ const VELDNAMEN: Record<string, string> = {
   regio: "regio",
   opmerking: "opmerking",
 };
-const NEGEER = new Set(["id", "created_at", "aangevraagd_op", "beoordeeld_op", "user_id", "bron"]);
+const NEGEER = new Set(["id", "created_at", "aangevraagd_op", "beoordeeld_op", "user_id", "bron", "toegang_hash", "toegang_aangemaakt"]);
 
 type Rij = Record<string, unknown> | null;
 interface LogRegel {
   id: number;
   user_id: string | null;
+  zorgverlener_id: string | null;
   tabel: string;
   actie: string;
   oud: Rij;
@@ -130,7 +131,11 @@ export default async function LogPagina({ searchParams }: PageProps<"/beheer/log
             {regels.map((r) => (
               <li key={r.id} className="flex flex-col gap-0.5 py-3">
                 <span className="text-sm text-gray-700">
-                  {tijdstipTekst(r.tijd)} · {r.user_id ? (naamVanUser.get(r.user_id) ?? "onbekende gebruiker") : "systeem"}
+                  {tijdstipTekst(r.tijd)} · {r.user_id
+                    ? (naamVanUser.get(r.user_id) ?? "onbekende gebruiker")
+                    : r.zorgverlener_id
+                      ? `${naamVanZv.get(r.zorgverlener_id) ?? "zorgverlener"} (via persoonlijke link)`
+                      : "systeem"}
                 </span>
                 <span className="text-lg">
                   <strong>

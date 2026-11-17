@@ -10,7 +10,7 @@ export default async function ZorgverlenersPagina({ searchParams }: PageProps<"/
   const lijst = await haalZorgverlenersVolledig();
   return (
     <div className="flex flex-col gap-5">
-      {sp.melding === "opgeslagen" && <Melding soort="succes">Opgeslagen.</Melding>}
+      {sp.melding === "opgeslagen" && <Melding soort="succes">Opgeslagen. Maak bij een nieuwe zorgverlener nu een persoonlijke link (klik op de naam).</Melding>}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <PaginaTitel>Zorgverleners</PaginaTitel>
         <Link href="/beheer/zorgverleners/nieuw" className={knopKlassen("succes", true)}>
@@ -31,10 +31,10 @@ export default async function ZorgverlenersPagina({ searchParams }: PageProps<"/
               <span className="flex items-center gap-2 text-xl font-bold">
                 <KleurBolletje kleur={z.kleur} groot /> {z.naam}
               </span>
-              <span className="break-all text-gray-700">{z.email}</span>
+              {z.email && <span className="break-all text-gray-700">{z.email}</span>}
               <span className="text-sm font-semibold">
                 {z.rol === "admin" ? "Beheerder" : "Zorgverlener"} · {z.actief ? "actief" : "gedeactiveerd"} ·{" "}
-                {z.user_id ? "heeft ingelogd" : "nog niet ingelogd"}
+                {z.rol === "admin" ? "logt in met wachtwoord" : z.toegang_aangemaakt ? "persoonlijke link actief" : "nog geen link"}
               </span>
             </Link>
           </li>

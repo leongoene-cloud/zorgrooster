@@ -9,14 +9,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center justify-between gap-4">
             <p className="text-xl font-bold">Zorgrooster</p>
-            <div className="flex items-center gap-3 sm:hidden">
-              <UitlogKnop />
-            </div>
+            {sessie.isAdmin && (
+              <div className="flex items-center gap-3 sm:hidden">
+                <UitlogKnop />
+              </div>
+            )}
           </div>
           <Navigatie isAdmin={sessie.isAdmin} />
           <div className="hidden items-center gap-4 sm:flex">
             <span className="text-base">{sessie.zorgverlener.naam}</span>
-            <UitlogKnop />
+            {sessie.isAdmin && <UitlogKnop />}
           </div>
         </div>
       </header>
