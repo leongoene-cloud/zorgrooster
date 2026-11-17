@@ -13,7 +13,7 @@ Web-app waarin zorgverleners het maandrooster bekijken en verlof aanvragen, en d
 |---|---|---|
 | Rooster | iedereen | Maandkalender (op telefoon een lijst per dag), filter per persoon in de URL (`?zv=…&maand=2026-12`), knop *Mijn diensten* met totaal diensten en uren, schoolvakanties gearceerd, goedgekeurd verlof als label, export naar agenda (.ics) |
 | Verlof | iedereen | Verlof aanvragen (waarschuwt bij eigen diensten en schoolvakanties), eigen aanvragen met status en annuleren. Beheerder: beoordelen (goedkeuren/afkeuren met opmerking) en historie met filters. Schoolvakanties regio Midden voor de komende 12 maanden |
-| Beheer | beheerder | Rooster bewerken (klik op dag → formulier met datum ingevuld), weeksjabloon + *Vul maand vanuit sjabloon*, *Kopieer vorige week/maand* (altijd eerst een voorbeeld), controles (dubbele/overlappende diensten, dienst tijdens verlof, gaten in dag 09–21 of nacht 21–09), vervanging na goedgekeurd verlof, zorgverleners, urenoverzicht + Excel-export, eenmalige import uit Excel/CSV, schoolvakanties, wijzigingslog |
+| Beheer | beheerder | Rooster bewerken (klik op dag → formulier met datum ingevuld), weeksjabloon + *Vul maand vanuit sjabloon*, *Kopieer vorige week/maand* (altijd eerst een voorbeeld), controles (dubbele/overlappende diensten, dienst tijdens verlof, dagen zonder dagdienst of zonder nachtdienst), vervanging na goedgekeurd verlof, zorgverleners, urenoverzicht + Excel-export, eenmalige import uit Excel/CSV, schoolvakanties, wijzigingslog |
 
 **Uren:** per dienst afgerond op kwartieren; een dienst waarvan de eindtijd ≤ begintijd is loopt door tot de volgende dag (21:00–09:00 = 12 uur, ook in de nacht van de zomer/wintertijdwissel). Werkelijke tijden (bijv. uitloop) gaan vóór de geplande tijden. Een dienst telt mee in de maand waarin hij begint.
 
@@ -88,8 +88,8 @@ npm run test:db            # 25 tests: rechten van beheerder, links en anonieme 
 
 ## Instellingen in de code
 
-- Standaardtijden per diensttype: `src/lib/types.ts` (`DIENST_TYPES`).
-- Welke uren gedekt moeten zijn (dag 09:00–21:00, nacht 21:00–09:00): `src/lib/controles.ts`.
+- Standaardtijden per diensttype (dag 12:00–16:00, nacht 21:00–09:00): `src/lib/types.ts` (`DIENST_TYPES`).
+- Controle op gaten (elke dag een dag- én een nachtdienst): `src/lib/controles.ts`.
 - Kleuren voor zorgverleners: `src/app/(app)/beheer/zorgverleners/zv-formulier.tsx`.
 
 ## Later

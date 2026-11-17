@@ -114,17 +114,19 @@ describe("controles", () => {
       ),
     ).toHaveLength(0);
   });
-  it("vindt gaten in dag en nacht", () => {
+  it("vindt dagen zonder dag- of nachtdienst", () => {
     const w = gatenInZorg(
       [
-        dienst({ datum: "2026-12-01", start_tijd: "09:00", eind_tijd: "15:00" }),
-        dienst({ datum: "2026-12-01", start_tijd: "17:00", eind_tijd: "21:00" }),
+        dienst({ datum: "2026-12-01", start_tijd: "12:00", eind_tijd: "16:00" }),
+        dienst({ datum: "2026-12-02", type: "nacht", start_tijd: "21:00", eind_tijd: "08:45" }),
       ],
-      ["2026-12-01"],
+      ["2026-12-01", "2026-12-02", "2026-12-03"],
     );
     expect(w.map((x) => x.tekst)).toEqual([
-      "di 1 dec: dag niet helemaal gedekt (15:00–17:00)",
       "di 1 dec: geen nachtdienst",
+      "wo 2 dec: geen dagdienst",
+      "do 3 dec: geen dagdienst",
+      "do 3 dec: geen nachtdienst",
     ]);
   });
   it("volledig gedekte maand geeft geen gaten; dienst tijdens verlof wel een waarschuwing", () => {

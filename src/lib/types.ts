@@ -72,7 +72,7 @@ export interface DienstSjabloon {
 }
 
 export const DIENST_TYPES: { type: DienstType; label: string; start: string; eind: string }[] = [
-  { type: "dag", label: "Dag", start: "09:00", eind: "21:00" },
+  { type: "dag", label: "Dag", start: "12:00", eind: "16:00" },
   { type: "nacht", label: "Nacht", start: "21:00", eind: "09:00" },
   { type: "avond", label: "Avond", start: "17:00", eind: "21:00" },
   { type: "overig", label: "Overig", start: "09:00", eind: "13:00" },

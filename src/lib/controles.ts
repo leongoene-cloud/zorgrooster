@@ -1,10 +1,6 @@
 import { dagenVanMaand, datumKort, naarDatum, periodesOverlappen, tijd } from "./datum";
 import type { Dienst, VerlofPeriode, ZorgverlenerPubliek } from "./types";
-import { duurMinuten, minuten, minutenNaarTijd } from "./uren";
-
-/** Tijdvakken die altijd gedekt moeten zijn: dag 09:00–21:00 en nacht 21:00–09:00 */
-export const ZORG_DAG_START = "09:00";
-export const ZORG_NACHT_START = "21:00";
+import { duurMinuten, minuten } from "./uren";
 
 export type WaarschuwingSoort = "overlap" | "verlof" | "gat";
 
@@ -75,46 +71,18 @@ export function dienstenTijdensVerlof(
   return uit;
 }
 
-/** Ongedekte stukken van [van, tot) gegeven een lijst intervallen */
-function ongedekt(van: number, tot: number, intervallen: [number, number][]): [number, number][] {
-  const relevant = intervallen.filter(([a, b]) => b > van && a < tot).sort((x, y) => x[0] - y[0]);
-  const gaten: [number, number][] = [];
-  let cursor = van;
-  for (const [a, b] of relevant) {
-    if (a > cursor) gaten.push([cursor, Math.min(a, tot)]);
-    cursor = Math.max(cursor, b);
-    if (cursor >= tot) break;
-  }
-  if (cursor < tot) gaten.push([cursor, tot]);
-  return gaten;
-}
-
 /**
- * Gaten in de zorg: per datum moeten de dag (09:00–21:00) en de nacht (21:00–09:00 volgende dag)
- * volledig gedekt zijn. Geef diensten mee van de dag vóór t/m de dag na de maand.
+ * Gaten in de zorg: elke datum hoort minstens één dagdienst (dag, avond of overig)
+ * en één nachtdienst te hebben. Hoe lang die duren maakt niet uit (dagzorg wisselt).
  */
 export function gatenInZorg(diensten: Dienst[], datums: string[]): Waarschuwing[] {
-  const intervallen = diensten.map(dienstInterval);
-  const dagStart = minuten(ZORG_DAG_START);
-  const nachtStart = minuten(ZORG_NACHT_START);
   const uit: Waarschuwing[] = [];
   for (const datum of datums) {
-    const basis = dagIndex(datum) * 1440;
-    const delen: [string, number, number][] = [
-      ["dag", basis + dagStart, basis + nachtStart],
-      ["nacht", basis + nachtStart, basis + 1440 + dagStart],
-    ];
-    for (const [deel, van, tot] of delen) {
-      const gaten = ongedekt(van, tot, intervallen);
-      if (gaten.length === 0) continue;
-      const geheel = gaten.length === 1 && gaten[0][0] === van && gaten[0][1] === tot;
-      const tekst = geheel
-        ? `${datumKort(datum)}: geen ${deel}dienst`
-        : `${datumKort(datum)}: ${deel} niet helemaal gedekt (${gaten
-            .map(([a, b]) => `${minutenNaarTijd(a)}–${minutenNaarTijd(b)}`)
-            .join(", ")})`;
-      uit.push({ soort: "gat", datum, tekst, dienstIds: [] });
-    }
+    const opDag = diensten.filter((d) => d.datum === datum);
+    if (!opDag.some((d) => d.type !== "nacht"))
+      uit.push({ soort: "gat", datum, tekst: `${datumKort(datum)}: geen dagdienst`, dienstIds: [] });
+    if (!opDag.some((d) => d.type === "nacht"))
+      uit.push({ soort: "gat", datum, tekst: `${datumKort(datum)}: geen nachtdienst`, dienstIds: [] });
   }
   return uit;
 }
