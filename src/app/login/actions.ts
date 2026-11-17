@@ -1,8 +1,10 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ActieStatus } from "@/components/formulier";
 import { createClient } from "@/lib/supabase/server";
+import { ZV_COOKIE } from "@/lib/toegang";
 
 /** Beheerder logt in met alleen een wachtwoord; het e-mailadres staat in ADMIN_EMAIL */
 export async function inloggenBeheer(_: ActieStatus, data: FormData): Promise<ActieStatus> {
@@ -17,5 +19,7 @@ export async function inloggenBeheer(_: ActieStatus, data: FormData): Promise<Ac
     if (error.status === 429) return { fout: "Te veel pogingen. Wacht een paar minuten en probeer het opnieuw." };
     return { fout: "Dit wachtwoord klopt niet." };
   }
+  // Was dit apparaat via de link van een zorgverlener ingelogd? Die link vergeten.
+  (await cookies()).delete(ZV_COOKIE);
   redirect("/beheer");
 }
