@@ -7,6 +7,7 @@ import type {
   Schoolvakantie,
   VerlofAanvraag,
   VerlofPeriode,
+  Werkbeschrijving,
   Zorgverlener,
   ZorgverlenerPubliek,
 } from "./types";
@@ -132,5 +133,14 @@ export async function haalSjablonen(): Promise<DienstSjabloon[]> {
   const sb = await createClient();
   return check(
     await sb.from("dienst_sjablonen").select("id, weekdag, ritme, zorgverlener_id, type, start_tijd, eind_tijd").order("weekdag").order("start_tijd"),
+  );
+}
+
+export async function haalWerkbeschrijvingen(): Promise<Werkbeschrijving[]> {
+  const sb = await createClient();
+  const token = await linkToken();
+  if (token) return check(await sb.rpc("zv_werkbeschrijvingen", { p_token: token }));
+  return check(
+    await sb.from("werkbeschrijvingen").select("id, titel, inhoud, volgorde, bijgewerkt_op").order("volgorde").order("titel"),
   );
 }

@@ -91,3 +91,11 @@ export const STATUS_LABEL: Record<VerlofStatus, string> = {
   afgekeurd: "Afgekeurd",
   geannuleerd: "Geannuleerd",
 };
+
+export interface Werkbeschrijving {
+  id: string;
+  titel: string;
+  inhoud: string;
+  volgorde: number;
+  bijgewerkt_op: string;
+}

@@ -459,3 +459,21 @@ describe("persoonlijke link (zorgverlener zonder account)", () => {
     await db.query("select public.trek_toegangslink_in($1)", [ids.bram.zv]);
   });
 });
+
+describe("werkbeschrijvingen", () => {
+  it("admin schrijft; zorgverlener leest alleen via geldige link; anoniem niets", async () => {
+    await als("admin");
+    await db.query("insert into public.werkbeschrijvingen (titel, inhoud, volgorde) values ('Ochtendzorg', '- wassen', 1)");
+    const token = (await db.query("select public.nieuwe_toegangslink($1) as t", [ids.anna.zv])).rows[0].t;
+
+    await als("anna"); // ingelogd account zonder beheerrechten
+    expect((await db.query("select * from public.werkbeschrijvingen")).rowCount).toBe(0);
+    await faalt("insert into public.werkbeschrijvingen (titel) values ('x')");
+
+    await als("anoniem");
+    await faalt("select * from public.werkbeschrijvingen");
+    const r = await db.query("select titel from public.zv_werkbeschrijvingen($1)", [token]);
+    expect(r.rows).toEqual([{ titel: "Ochtendzorg" }]);
+    expect((await db.query("select * from public.zv_werkbeschrijvingen('ongeldig-ongeldig-ongeldig-ongeldig')")).rowCount).toBe(0);
+  });
+});

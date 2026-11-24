@@ -15,6 +15,7 @@ const TABELLEN: Record<string, string> = {
   zorgverleners: "Zorgverleners",
   dienst_sjablonen: "Sjabloon",
   schoolvakanties: "Vakanties",
+  werkbeschrijvingen: "Werkbeschrijving",
 };
 const ACTIES: Record<string, string> = { insert: "toegevoegd", update: "gewijzigd", delete: "verwijderd" };
 
@@ -40,9 +41,12 @@ const VELDNAMEN: Record<string, string> = {
   weekdag: "weekdag",
   reden: "reden",
   regio: "regio",
+  titel: "titel",
+  inhoud: "tekst",
+  volgorde: "volgorde",
   opmerking: "opmerking",
 };
-const NEGEER = new Set(["id", "created_at", "aangevraagd_op", "beoordeeld_op", "user_id", "bron", "toegang_hash", "toegang_aangemaakt"]);
+const NEGEER = new Set(["id", "created_at", "bijgewerkt_op", "aangevraagd_op", "beoordeeld_op", "user_id", "bron", "toegang_hash", "toegang_aangemaakt"]);
 
 type Rij = Record<string, unknown> | null;
 interface LogRegel {
@@ -88,7 +92,7 @@ export default async function LogPagina({ searchParams }: PageProps<"/beheer/log
     if (r.tabel === "verlof_aanvragen") {
       return `${naamVanZv.get(String(rij.zorgverlener_id)) ?? "?"} · ${datumKort(String(rij.start_datum))} t/m ${datumKort(String(rij.eind_datum))}`;
     }
-    return String(rij.naam ?? "");
+    return String(rij.naam ?? rij.titel ?? "");
   };
 
   const wijzigingen = (r: LogRegel): string[] => {

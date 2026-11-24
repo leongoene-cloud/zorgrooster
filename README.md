@@ -14,6 +14,7 @@ Web-app waarin zorgverleners het maandrooster bekijken en verlof aanvragen, en d
 |---|---|---|
 | Rooster | iedereen | Maandkalender (op telefoon een lijst per dag), filter per persoon in de URL (`?zv=…&maand=2026-12`), knop *Mijn diensten* met totaal diensten en uren, schoolvakanties gearceerd, goedgekeurd verlof als label, export naar agenda (.ics) |
 | Verlof | iedereen | Verlof aanvragen (waarschuwt bij eigen diensten en schoolvakanties), eigen aanvragen met status en annuleren. Beheerder: verlof inplannen voor een zorgverlener (direct goedgekeurd), beoordelen (goedkeuren/afkeuren met opmerking), historie met filters en verlof intrekken. Schoolvakanties regio Midden voor de komende 12 maanden |
+| Werkbeschrijving | iedereen | Werkbeschrijvingen om na te lezen (kopjes, opsommingen, genummerde stappen, vet). Beheerder: toevoegen, bewerken, verwijderen en volgorde met Omhoog/Omlaag |
 | Beheer | beheerder | Rooster bewerken (klik op dag → formulier met datum ingevuld), weeksjabloon + *Vul maand vanuit sjabloon*, *Kopieer vorige week/maand* (altijd eerst een voorbeeld), controles (dubbele/overlappende diensten, dienst tijdens verlof, dagen zonder dagdienst of zonder nachtdienst), vervanging na goedgekeurd verlof, zorgverleners, urenoverzicht + Excel-export, eenmalige import uit Excel/CSV, schoolvakanties, wijzigingslog |
 
 **Uren:** per dienst afgerond op kwartieren; een dienst waarvan de eindtijd ≤ begintijd is loopt door tot de volgende dag (21:00–09:00 = 12 uur, ook in de nacht van de zomer/wintertijdwissel). Werkelijke tijden (bijv. uitloop) gaan vóór de geplande tijden. Een dienst telt mee in de maand waarin hij begint.
@@ -37,6 +38,7 @@ Web-app waarin zorgverleners het maandrooster bekijken en verlof aanvragen, en d
    - `supabase/migrations/20261117000003_persoonlijke_links.sql`
    - `supabase/migrations/20261118000004_sjabloon_om_de_week.sql`
    - `supabase/migrations/20261118000005_verlof_team.sql`
+   - `supabase/migrations/20261124000006_werkbeschrijvingen.sql`
    - `supabase/seed.sql` — **verander eerst `admin@example.com` in je eigen e-mailadres** en haal de testzorgverleners weg als je die niet wilt.
 3. **Authentication → Users → Add user → Create new user**: vul hetzelfde e-mailadres in, kies je beheerwachtwoord en vink *Auto Confirm User* aan.
 4. **Authentication → Sign In / Providers**: zet *Allow new users to sign up* **uit**. Zo kan niemand anders een account aanmaken.
