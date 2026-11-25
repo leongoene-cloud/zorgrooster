@@ -9,7 +9,7 @@
 export type Blok =
   | { soort: "kop"; tekst: string }
   | { soort: "alinea"; regels: string[] }
-  | { soort: "lijst"; genummerd: boolean; items: string[] };
+  | { soort: "lijst"; genummerd: boolean; items: string[]; start?: number };
 
 export function parseOpmaak(tekst: string): Blok[] {
   const blokken: Blok[] = [];
@@ -22,13 +22,14 @@ export function parseOpmaak(tekst: string): Blok[] {
     }
     const kop = regel.match(/^#{1,3}\s+(.*)$/);
     const punt = regel.match(/^[-*•]\s+(.*)$/);
-    const nummer = regel.match(/^\d+[.)]\s+(.*)$/);
+    const nummer = regel.match(/^(\d+)[.)]\s+(.*)$/);
     if (kop) blokken.push({ soort: "kop", tekst: kop[1] });
     else if (punt || nummer) {
       const genummerd = Boolean(nummer);
-      const item = (punt ?? nummer)![1];
+      const item = punt ? punt[1] : nummer![2];
       const l = laatste();
       if (l?.soort === "lijst" && l.genummerd === genummerd) l.items.push(item);
+      else if (nummer && Number(nummer[1]) !== 1) blokken.push({ soort: "lijst", genummerd, items: [item], start: Number(nummer[1]) });
       else blokken.push({ soort: "lijst", genummerd, items: [item] });
     } else {
       const l = laatste();

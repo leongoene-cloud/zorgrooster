@@ -14,6 +14,13 @@ describe("opmaak werkbeschrijving", () => {
       { soort: "alinea", regels: ["Slot"] },
     ]);
   });
+  it("genummerde lijst loopt door na tussenliggende opsomming", () => {
+    expect(parseOpmaak("1. eerst\n   - detail\n2. dan")).toEqual([
+      { soort: "lijst", genummerd: true, items: ["eerst"] },
+      { soort: "lijst", genummerd: false, items: ["detail"] },
+      { soort: "lijst", genummerd: true, items: ["dan"], start: 2 },
+    ]);
+  });
   it("vet en geen HTML", () => {
     expect(vetStukken("a **b** c")).toEqual(["a ", "b", " c"]);
     expect(parseOpmaak("<script>x</script>")).toEqual([{ soort: "alinea", regels: ["<script>x</script>"] }]);

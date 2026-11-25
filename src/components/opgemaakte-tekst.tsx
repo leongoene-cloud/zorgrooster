@@ -23,7 +23,11 @@ export function OpgemaakteTekst({ tekst }: { tekst: string }) {
         if (b.soort === "lijst") {
           const Lijst = b.genummerd ? "ol" : "ul";
           return (
-            <Lijst key={i} className={`flex flex-col gap-1.5 pl-7 ${b.genummerd ? "list-decimal" : "list-disc"}`}>
+            <Lijst
+              key={i}
+              start={b.genummerd ? b.start : undefined}
+              className={`flex flex-col gap-1.5 pl-7 ${b.genummerd ? "list-decimal" : "list-disc"}`}
+            >
               {b.items.map((item, j) => (
                 <li key={j}>
                   <Inline tekst={item} />
