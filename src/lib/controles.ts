@@ -101,3 +101,24 @@ export function alleControles(opts: {
     ...gatenInZorg(opts.diensten, dagenVanMaand(opts.maand)),
   ].sort((a, b) => a.datum.localeCompare(b.datum));
 }
+
+export type DienstDeel = "dag" | "nacht";
+
+export interface OpenPlek {
+  datum: string;
+  deel: DienstDeel;
+  /** 'leeg' = geen dienst; 'vervanging' = dienst valt in goedgekeurd verlof en moet nog vervangen worden */
+  reden: "leeg" | "vervanging";
+  diensten: Dienst[];
+}
+
+/** Open dag- of nachtdiensten per datum: geen dienst, of alleen diensten die vervangen moeten worden */
+export function openPlekken(diensten: Dienst[], datums: string[], deel: DienstDeel): OpenPlek[] {
+  const uit: OpenPlek[] = [];
+  for (const datum of datums) {
+    const hier = diensten.filter((d) => d.datum === datum && (deel === "nacht" ? d.type === "nacht" : d.type !== "nacht"));
+    if (hier.length === 0) uit.push({ datum, deel, reden: "leeg", diensten: [] });
+    else if (hier.every((d) => d.vervanging_nodig)) uit.push({ datum, deel, reden: "vervanging", diensten: hier });
+  }
+  return uit;
+}

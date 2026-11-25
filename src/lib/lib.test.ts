@@ -1,6 +1,6 @@
 import * as XLSX from "xlsx";
 import { describe, expect, it } from "vitest";
-import { alleControles, gatenInZorg, overlappendeDiensten } from "./controles";
+import { alleControles, gatenInZorg, openPlekken, overlappendeDiensten } from "./controles";
 import {
   aantalDagen,
   dagenVanMaand,
@@ -113,6 +113,23 @@ describe("controles", () => {
         namen,
       ),
     ).toHaveLength(0);
+  });
+  it("open plekken: geen dienst of alleen te vervangen diensten", () => {
+    const diensten = [
+      dienst({ datum: "2026-12-01", start_tijd: "12:00", eind_tijd: "16:00" }),
+      dienst({ datum: "2026-12-02", vervanging_nodig: true }),
+      dienst({ datum: "2026-12-03", vervanging_nodig: true }),
+      dienst({ datum: "2026-12-03", zorgverlener_id: "bram" }),
+      dienst({ datum: "2026-12-01", type: "nacht", start_tijd: "21:00", eind_tijd: "09:00" }),
+    ];
+    const datums = ["2026-12-01", "2026-12-02", "2026-12-03"];
+    const dag = openPlekken(diensten, datums, "dag");
+    expect(dag.map((o) => [o.datum, o.reden])).toEqual([["2026-12-02", "vervanging"]]);
+    const nacht = openPlekken(diensten, datums, "nacht");
+    expect(nacht.map((o) => [o.datum, o.reden])).toEqual([
+      ["2026-12-02", "leeg"],
+      ["2026-12-03", "leeg"],
+    ]);
   });
   it("vindt dagen zonder dag- of nachtdienst", () => {
     const w = gatenInZorg(

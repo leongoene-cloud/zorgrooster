@@ -13,6 +13,7 @@ export function DienstFormulier({
   datum,
   terug,
   waarschuwingen,
+  standaardType,
 }: {
   actie: Actie;
   zorgverleners: ZorgverlenerPubliek[];
@@ -20,8 +21,9 @@ export function DienstFormulier({
   datum: string;
   terug?: string;
   waarschuwingen?: React.ReactNode;
+  standaardType?: DienstType;
 }) {
-  const [type, setType] = useState<DienstType>(dienst?.type ?? "dag");
+  const [type, setType] = useState<DienstType>(dienst?.type ?? standaardType ?? "dag");
   const std = DIENST_TYPES.find((t) => t.type === type)!;
   const [start, setStart] = useState(dienst?.start_tijd.slice(0, 5) ?? std.start);
   const [eind, setEind] = useState(dienst?.eind_tijd.slice(0, 5) ?? std.eind);
